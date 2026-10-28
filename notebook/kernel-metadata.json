@@ -1,0 +1,17 @@
+{
+ "id": "doukanturan/nfl-bdb27-speed-travels",
+ "title": "NFL BDB27 Speed Travels",
+ "code_file": "speed-travels.ipynb",
+ "language": "python",
+ "kernel_type": "notebook",
+ "is_private": false,
+ "enable_gpu": false,
+ "enable_tpu": false,
+ "enable_internet": false,
+ "keywords": [],
+ "dataset_sources": [],
+ "kernel_sources": [],
+ "competition_sources": [
+  "nfl-big-data-bowl-2027"
+ ]
+}

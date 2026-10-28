@@ -1,0 +1,6 @@
+Group,Outcome,Players / snaps,Effect of +0.5 yd/s top speed (95% CI),p
+Interior DL,Pressure per rush,"88 / 14,868","OR 1.22 [1.12, 1.33]",9.4e-06
+Edge,Pressure per rush,"121 / 19,322","OR 1.05 [0.96, 1.14]",0.30
+"OL (T, G, C)",Pressure allowed per pass block,"94 / 48,404","OR 1.03 [0.93, 1.14]",0.58
+WR / TE,"Separation at pass forward (yd), route and coverage adjusted","123 / 35,252","+0.008 yd [-0.052, +0.067]",0.80
+"WR / TE, deep routes",Separation at pass forward (yd),"122 / 13,020","+0.016 yd [-0.060, +0.092]",0.68
