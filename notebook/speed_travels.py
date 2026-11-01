@@ -7,13 +7,15 @@
 #
 # **Short answer.**
 # 1. The 10 Hz data shows that a prospect's 40-yard time is almost entirely *top-end speed*; the start phase is much noisier and carries no extra signal.
-# 2. For **interior defensive linemen**, Combine top speed predicts pass-rush pressure in games, on top of draft slot, weight and arm length (odds ratio 1.22 per +0.5 yd/s, 95% CI 1.12 to 1.33). It is stable across seasons, teams, opponents, and outcome definitions.
-# 3. For **edge rushers, offensive linemen and receivers** we find no speed signal. The boundary matters as much as the finding.
+# 2. For **interior defensive linemen**, Combine top speed predicts pass-rush pressure in games, on top of draft slot, weight and arm length (odds ratio about 1.2 per +0.5 yd/s; the exact estimate, interval and every other number quoted in the writeup are printed below and saved to `results.json`). It is stable across seasons, teams, opponents, and outcome definitions.
+# 3. For **edge rushers, offensive linemen and receivers** we find no detectable speed signal. The boundary matters as much as the finding.
 # 4. Drill "first-step" numbers from the Combine pass-rush drill do not translate to in-game first-step speed, and are only about 0.4 to 0.6 reliable on their own.
 #
-# 5. **Added checks (Part 5).** The result survives sensor cleaning, selection-bias correction (IPW and a Heckman-type control function over all 510 prospects), and a cross-validated LightGBM expected-pressure model (Pressure Over Expected). Formal mediation (Imai-Keele-Tingley) puts about 18% of the interior effect through get-off; on the edge, path efficiency suppresses the speed effect. All tests carry Benjamini-Hochberg q-values.
+# 5. **Added checks (Part 5).** The result survives sensor cleaning, selection-bias correction (IPW and a Heckman-type control function over all 510 prospects), and a cross-validated expected-pressure context model chosen out of fold between a regularized LightGBM and a ridge logistic regression (Pressure Over Expected). Formal mediation (Imai-Keele-Tingley) puts roughly a fifth of the interior effect through get-off; on the edge, path efficiency suppresses the speed effect. All tests carry Benjamini-Hochberg q-values.
 #
-# **Layout.** Part 1 builds Combine movement features. Part 2 builds in-game features (cached after the first run). Part 3 is the statistics. Part 4 is the figures. Part 5 (placed before Part 4 in the file) holds the sensor audit, selection, xP/POE, mediation, FDR and decision-matrix numbers.
+# 6. **Data hygiene.** Regular-season games only (`season_type == "REG"`), dropbacks only, ball frames removed from the Combine file, draft-class fixed effects in every model, and no per-play competition data written to the notebook output.
+#
+# **Layout.** Part 1 builds Combine movement features. Part 2 builds in-game features (cached in a non-published directory after the first run). Part 3 is the statistics. Part 4 is the figures. Part 5 (placed before Part 4 in the file) holds the sensor audit, selection, xP/POE, mediation, FDR and decision-matrix numbers.
 
 # %%
 import os, json, time, warnings
@@ -27,6 +29,9 @@ warnings.filterwarnings("ignore")
 
 IN = os.environ.get("NFL_IN", "/kaggle/input/competitions/nfl-big-data-bowl-2027/nfl-big-data-bowl-2027")
 WORK = os.environ.get("NFL_WORK", "/kaggle/working")
+# Per-play intermediate tables are competition-derived data, so they are cached outside the saved output directory
+# (/kaggle/temp is not published with the notebook). Only aggregates, figures and results.json are written to WORK.
+CACHE = os.environ.get("NFL_CACHE", "/kaggle/temp" if os.path.isdir("/kaggle") else WORK); os.makedirs(CACHE, exist_ok=True)
 FIG = os.path.join(WORK, "figs"); os.makedirs(FIG, exist_ok=True)
 FAST = os.environ.get("NFL_FAST", "0") == "1"      # smaller bootstraps for quick local tests
 T0 = time.time()
@@ -87,7 +92,7 @@ for (pid, eid), g in ct[ct.drill_name == "PASS_RUSH_DRILL"].groupby(["nfl_id", "
     rows.append(dict(nfl_id=pid, event_id=eid, s05=np.interp(0.5, tt, s), s10=np.interp(1.0, tt, s), speak=speak, a_first=a[on:on + 6].mean() if len(a) > on + 6 else np.nan,
                      smin_turn=smin_turn, bend_retention=smin_turn / max(speak, 1e-3) if np.isfinite(smin_turn) else np.nan, path_eff=net / max(plen, 1e-3)))
 prd = pd.DataFrame(rows); log("pass-rush drill attempts", len(prd), "players", prd.nfl_id.nunique())
-c40.to_parquet(f"{WORK}/c40.parquet"); log("c40", c40.shape, " | forty vs tracking top speed r =", round(c40.dropna(subset=['forty']).pipe(lambda m: m.vpk.corr(m.forty)), 3))
+c40.to_parquet(f"{CACHE}/c40.parquet"); log("c40", c40.shape, " | forty vs tracking top speed r =", round(c40.dropna(subset=['forty']).pipe(lambda m: m.vpk.corr(m.forty)), 3))
 
 # %% [markdown]
 # ## Part 2. In-game features
@@ -120,44 +125,63 @@ def snap_profile(year):
     out["smax_pre"] = pre.groupby(keys, sort=False)["s"].max(); out["pf_rel"] = d.groupby(keys, sort=False)["pf_rel"].first()
     out = out.reset_index(); out["season"] = year; log("snap profile", year, out.shape); return out
 
-_c = f"{WORK}/snap_profile.parquet"
-if os.path.exists(_c) and os.path.exists(f"{WORK}/player_play_slim.parquet") and "adx_20" in pd.read_parquet(_c).columns:
-    sp = pd.read_parquet(_c); pp = pd.read_parquet(f"{WORK}/player_play_slim.parquet"); log("loaded cached in-game tables")
+_c = f"{CACHE}/snap_profile.parquet"
+if os.path.exists(_c) and os.path.exists(f"{CACHE}/player_play_slim.parquet") and "adx_20" in pd.read_parquet(_c).columns:
+    sp = pd.read_parquet(_c); pp = pd.read_parquet(f"{CACHE}/player_play_slim.parquet"); log("loaded cached in-game tables")
 else:
     sp = pd.concat([snap_profile(y) for y in (2023, 2024, 2025)], ignore_index=True)
     pp = pd.read_csv(f"{IN}/player_play.csv", low_memory=False).drop(columns=["play_description"])
-    sp.to_parquet(f"{WORK}/snap_profile.parquet"); pp.to_parquet(f"{WORK}/player_play_slim.parquet")
+    sp.to_parquet(f"{CACHE}/snap_profile.parquet"); pp.to_parquet(f"{CACHE}/player_play_slim.parquet")
 def season_of(g):
     y = g // 1000000; m = (g // 10000) % 100; return np.where(m >= 8, y, y - 1)
 pp["season"] = season_of(pp.game_id)
+# Regular season only. The game files also hold preseason and playoff games; the theme is regular-season performance,
+# so every main number uses season_type == "REG". The unfiltered tables are kept for one robustness row.
+GAMES = pd.read_csv(f"{IN}/games.csv").drop_duplicates("game_id"); _st = pp.game_id.map(GAMES.set_index("game_id").season_type).fillna("UNKNOWN")
+SEASON_SHARES = {str(k): float(v) for k, v in _st.value_counts(normalize=True).items()}
+REG_IDS = set(GAMES.loc[GAMES.season_type == "REG", "game_id"])
+pp_all, sp_all = pp, sp
+pp = pp[pp.game_id.isin(REG_IDS)].copy(); sp = sp[sp.game_id.isin(REG_IDS)].copy()
+log("player_play rows by season_type:", SEASON_SHARES, "| kept REG rows:", len(pp), "of", len(pp_all))
 log("player_play", pp.shape, "| prospects with in-game rows:", pp.nfl_id.nunique())
 
 # %% [markdown]
 # ## Part 3. Statistics
-# **Unit.** Speed is expressed per **+0.5 yd/s of Combine top speed** (about 0.2 s off a 40 time at this range). Controls are always: combine weight, arm length, log draft slot (undrafted = 260), down, and yards to go. Odds ratios come from logistic GEE models clustered by player (a prospect appears in hundreds of snaps).
+# **Unit.** Speed is expressed per **+0.5 yd/s of Combine top speed** (about 0.2 s off a 40 time at this range). Controls are always: combine weight, arm length, log draft slot (undrafted = 260), down, yards to go, and draft-class fixed effects (the 2025 Combine tracking export differs from 2023-24 in precision and level, so classes are compared within themselves). Odds ratios come from logistic GEE models clustered by player (a prospect appears in hundreds of snaps). **Regular-season dropbacks only**: preseason and playoff games are removed with `games.season_type`, and rushes are restricted to plays with a recorded pass result (the host's definition of a dropback).
 
 # %%
-cov = c40[["nfl_id", "vpk", "v10", "combine_weight", "draft_overall_pick", "arm_length", "forty", "ten_yd_split", "burst"]]
+cov = c40[["nfl_id", "vpk", "v10", "combine_weight", "draft_overall_pick", "arm_length", "forty", "ten_yd_split", "burst", "draft_year"]]
 def prep(d):
     d = d.merge(cov, on="nfl_id")
     d["vs"] = (d.vpk - 10.0) / 0.5; d["wz"] = z(d.combine_weight)
     d["pickz"] = z(np.log(d.draft_overall_pick.fillna(260))); d["az"] = z(d.arm_length.fillna(d.arm_length.mean()))
-    d["down3"] = (d.down >= 3).astype(int); d["ytg"] = d.yards_to_go.clip(upper=15); return d
-G = lambda f, dd, fam=None: smf.gee(f, groups="nfl_id", data=dd, family=fam or sm.families.Binomial()).fit()
+    d["down3"] = (d.down >= 3).astype(int); d["ytg"] = d.yards_to_go.clip(upper=15); d["dy"] = d.draft_year.astype(int); return d
+def G(f, dd, fam=None):
+    # Draft-class fixed effects are part of the standard control set; they are dropped automatically when a subset
+    # holds a single class (for example the 2023 season alone), where they would be collinear with the intercept.
+    if "C(dy)" in f and dd["dy"].nunique() < 2: f = f.replace(" + C(dy)", "")
+    return smf.gee(f, groups="nfl_id", data=dd, family=fam or sm.families.Binomial()).fit()
 def orci(g, k="vs"):
     b, se = g.params[k], g.bse[k]
     return dict(b=float(b), se=float(se), OR=float(np.exp(b)), lo=float(np.exp(b - 1.96 * se)), hi=float(np.exp(b + 1.96 * se)), p=float(g.pvalues[k]))
 res = {}; B_BOOT = 60 if FAST else 300
 
 rush = pp[pp.player_get_off.notna() & pp.lined_up_position.isin(["EDGE", "INTERIOR_LINE"])].copy()
+N_RUSH_RAW = len(rush)
+if "pass_result" in rush.columns:   # dropbacks only: per the host, a missing pass_result marks a play with no dropback
+    rush = rush[rush.pass_result.notna() & (rush.pass_result.astype(str).str.strip() != "")].copy()
+log("rush rows", N_RUSH_RAW, "-> dropback rush rows", len(rush))
 rush["pres"] = rush.time_to_pressure.notna().astype(int); rush["quick"] = (rush.time_to_pressure <= 2.5).astype(int); rush["late"] = (rush.time_to_pressure > 2.5).astype(int)
 rush["hurry"] = rush.time_to_qb_hurry.notna().astype(int); rush["sk"] = (rush.sack == 1).astype(int)
 rush = prep(rush); IL = rush[rush.lined_up_position == "INTERIOR_LINE"].copy(); ED = rush[rush.lined_up_position == "EDGE"].copy()
 res["n"] = dict(int_snaps=len(IL), int_players=int(IL.nfl_id.nunique()), edge_snaps=len(ED), edge_players=int(ED.nfl_id.nunique()), int_rate=float(IL.pres.mean()), edge_rate=float(ED.pres.mean()))
 Pint = IL.groupby("nfl_id").first(); res["speed_sd_int"] = float(Pint.vpk.std()); res["speed_p10_p50_p90"] = [float(x) for x in np.percentile(Pint.vpk, [10, 50, 90])]
 res["interior_corr_weight_speed"] = float(Pint.vpk.corr(Pint.combine_weight)); res["interior_corr_speed_logpick"] = float(Pint.vpk.corr(np.log(Pint.draft_overall_pick.fillna(260))))
-b = "wz + pickz + az + down3 + ytg"
-print(res["n"])
+b = "wz + pickz + az + down3 + ytg + C(dy)"      # C(dy): draft-class fixed effects (the 2025 Combine export differs from 2023-24)
+b_noclass = "wz + pickz + az + down3 + ytg"
+res["season_filter"] = dict(shares_of_player_play_rows=SEASON_SHARES, rows_all=int(len(pp_all)), rows_reg=int(len(pp)))
+res["n"]["rush_rows_with_get_off"] = int(N_RUSH_RAW); res["n"]["rush_rows_dropback_with_combine"] = int(len(rush))
+print(res["n"]); print("season_type shares:", SEASON_SHARES)
 
 # %% [markdown]
 # ### 3.1 Where does Combine speed matter? (Table 1)
@@ -169,7 +193,7 @@ ol = pp[pp.pressure_allowed.notna() & pp.lined_up_position.isin(["T", "G", "C"])
 T["ol_pressure_allowed"] = orci(G(f"pa ~ vs + {b}", ol)); T["ol_n"] = dict(snaps=len(ol), players=int(ol.nfl_id.nunique()))
 rt = pp[pp.route_ran.notna() & pp.lined_up_position.isin(["WR", "SLOT_WR", "TE"])].dropna(subset=["separation_at_pass_forward", "cushion", "team_coverage_man_zone"]).copy()
 rt["man"] = (rt.team_coverage_man_zone == "MAN_COVERAGE").astype(int); rt = prep(rt)
-fs = "separation_at_pass_forward ~ vs + wz + pickz + az + man + cushion + C(route_ran)"
+fs = "separation_at_pass_forward ~ vs + wz + pickz + az + man + cushion + C(route_ran) + C(dy)"
 def lin(g): return dict(b=float(g.params["vs"]), se=float(g.bse["vs"]), lo=float(g.params["vs"] - 1.96 * g.bse["vs"]), hi=float(g.params["vs"] + 1.96 * g.bse["vs"]), p=float(g.pvalues["vs"]))
 T["wr_sep_all"] = lin(G(fs, rt, sm.families.Gaussian())); dp = rt[rt.route_ran.isin(["GO", "POST", "CORNER"])]; T["wr_sep_deep"] = lin(G(fs, dp, sm.families.Gaussian()))
 T["wr_n"] = dict(snaps=len(rt), players=int(rt.nfl_id.nunique()), deep_snaps=len(dp), deep_players=int(dp.nfl_id.nunique()))
@@ -189,6 +213,12 @@ print(tab.to_string(index=False)); tab.to_csv(f"{WORK}/table1.csv", index=False)
 # %%
 Rb = {}
 Rb["Baseline (all controls)"] = orci(G(f"pres ~ vs + {b}", IL))
+Rb["Without draft-class fixed effects"] = orci(G(f"pres ~ vs + {b_noclass}", IL))
+# Same model on every game in the files (regular season plus preseason and playoffs)
+rush_all = pp_all[pp_all.player_get_off.notna() & pp_all.lined_up_position.isin(["EDGE", "INTERIOR_LINE"])].copy()
+if "pass_result" in rush_all.columns: rush_all = rush_all[rush_all.pass_result.notna() & (rush_all.pass_result.astype(str).str.strip() != "")].copy()
+rush_all["pres"] = rush_all.time_to_pressure.notna().astype(int); IL_all = prep(rush_all[rush_all.lined_up_position == "INTERIOR_LINE"].copy())
+Rb["All games incl. preseason and playoffs"] = orci(G(f"pres ~ vs + {b}", IL_all)); res["n"]["int_snaps_all_games"] = int(len(IL_all)); del rush_all, IL_all
 Rb["+ defensive team fixed effects"] = orci(G(f"pres ~ vs + {b} + C(team_abbr)", IL))
 Rb["+ opposing offense fixed effects"] = orci(G(f"pres ~ vs + {b} + C(possession_team)", IL))
 Rb["+ formation and receiver alignment"] = orci(G(f"pres ~ vs + {b} + C(offense_formation) + C(receiver_alignment)", IL.dropna(subset=["offense_formation", "receiver_alignment"])))
@@ -243,7 +273,7 @@ for _ in range(100 if FAST else 300):
     gg = smf.glm(f"pres ~ vs + {b}", IL, family=sm.families.Binomial(), freq_weights=w).fit(); rr.append((gg.predict(X1) * w).sum() / (gg.predict(X0) * w).sum())
 gg = smf.glm(f"pres ~ vs + {b}", IL, family=sm.families.Binomial()).fit()
 res["p10_p90"] = dict(v10=float(q10), v90=float(q90), rate10=float(gg.predict(X0).mean()), rate90=float(gg.predict(X1).mean()), ratio=float(gg.predict(X1).mean() / gg.predict(X0).mean()), ratio_lo=float(np.percentile(rr, 2.5)), ratio_hi=float(np.percentile(rr, 97.5)))
-fm = c40.dropna(subset=["forty"]); res["forty_poly"] = np.polyfit(fm.vpk, fm.forty, 2).tolist(); res["forty_vs_vpk_r"] = float(fm.vpk.corr(fm.forty))
+fm = c40.dropna(subset=["forty"]); res["forty_poly"] = np.polyfit(fm.vpk, fm.forty, 2).tolist(); res["forty_vs_vpk_r"] = float(fm.vpk.corr(fm.forty)); res["n40"] = int(len(fm))
 print(res["p10_p90"])
 
 # %% [markdown]
@@ -275,7 +305,7 @@ res["reliability_n"] = dict(forty=n40, prd=npr); print(json.dumps(res["reliabili
 
 # %% [markdown]
 # ### 3.6 Out-of-time check and the scouting list
-# Models are fit on the 2023 and 2024 seasons only, then predict each interior lineman's pressure rate in the 2025 season (including playoffs).
+# Models are fit on the 2023 and 2024 regular seasons only, then predict each interior lineman's pressure rate in the 2025 regular season.
 
 # %%
 from sklearn.metrics import log_loss
@@ -340,7 +370,7 @@ res["mech"] = mech; res["mech_geom"] = geom
 # Five additions, each answering a specific objection a reviewer could raise:
 # 1. **Sensor audit.** Are the 2024 Combine traces contaminated by quantization spikes, and does the result survive cleaning?
 # 2. **Selection bias.** Only players who reached the field are observed. Inverse-probability-of-selection weights and a Heckman-type control function over all 510 prospects.
-# 3. **Expected pressure (xP).** A cross-validated LightGBM on game context, then Pressure Over Expected (POE) and Beta-Binomial (empirical Bayes) player effects.
+# 3. **Expected pressure (xP).** A cross-validated context model (the better of a regularized LightGBM and a ridge logistic regression, by out-of-fold log loss), then Pressure Over Expected (POE) and Beta-Binomial (empirical Bayes) player effects.
 # 4. **Formal causal mediation** (Imai-Keele-Tingley quasi-Bayesian simulation), and **Benjamini-Hochberg** q-values across every test.
 # 5. **A decision matrix** whose thresholds come from the data.
 #
@@ -451,14 +481,15 @@ try:
         if D5.nfl_id.nunique() < 15: continue
         gw = smf.gee(f"pres ~ vs + {b}", groups="nfl_id", data=D5, family=sm.families.Binomial(), weights=D5[f"w_{col}"].values).fit()
         Rb[f"IPW selection weights ({lab})"] = orci(gw)
-        gh = G(f"pres ~ vs + {b} + imr_{col}", D5); Rb[f"Heckman-type control function ({lab})"] = orci(gh)
+        # Control function without draft-class fixed effects: draft class is the excluded variable that identifies the Mills ratio
+        gh = G(f"pres ~ vs + {b_noclass} + imr_{col}", D5); Rb[f"Heckman-type control function ({lab})"] = orci(gh)
         gu = G(f"pres ~ vs + {b}", D5); sel[col]["unweighted_same_sample"] = orci(gu); sel[col]["n_players_int"] = int(D5.nfl_id.nunique()); sel[col]["imr_coef_p"] = float(gh.pvalues[f"imr_{col}"])
     res["selection"] = sel; print(json.dumps(sel, indent=1, default=float))
 except Exception as e: fail("5.2_selection", e)
 
 # %% [markdown]
-# ### 5.3 Context model: LightGBM expected pressure (xP), POE and empirical-Bayes player effects
-# The xP model sees **only game context and alignment, never the player's identity or Combine numbers**. Features: down, distance, quarter, clock, score differential (defense minus offense), time to throw (`dropback_duration`, play level), defensive win probability, expected points, formation and receiver alignment, line-up group, distance to the sideline, and the distance to the nearest tracked offensive lineman at the snap (double-team proxy; defined only when that blocker is a tracked prospect, otherwise missing). Out-of-fold predictions use **5-fold cross-validation grouped by rusher**, so a player's own snaps never train the model that scores him.
+# ### 5.3 Context model: expected pressure (xP), POE and empirical-Bayes player effects
+# The xP model sees **only game context and alignment, never the player's identity or Combine numbers**. Two candidates (a regularized LightGBM and a ridge logistic regression) are scored out of fold and the better one is kept; if neither beats the league rate, context is judged uninformative and xP is the league rate. Features: down, distance, quarter, clock, score differential (defense minus offense), time to throw (`dropback_duration`, play level), defensive win probability, expected points, formation and receiver alignment, line-up group, distance to the sideline, and the distance to the nearest tracked offensive lineman at the snap (double-team proxy; defined only when that blocker is a tracked prospect, otherwise missing). Out-of-fold predictions use **5-fold cross-validation grouped by rusher**, so a player's own snaps never train the model that scores him.
 
 # %%
 try:
@@ -479,18 +510,40 @@ try:
     for c in cats: R[c] = R[c].astype("category")
     num = ["down", "yards_to_go", "quarter", "clock", "score_diff", "wp_def", "expected_points", "yardline_number", "ysl", "ol_d1", "ol_n2"]
     FULL = num + ["dbd"] + cats; NODB = num + cats
-    prm = dict(n_estimators=350, learning_rate=0.03, num_leaves=15, min_child_samples=120, subsample=0.8, subsample_freq=1, colsample_bytree=0.8, reg_lambda=5.0, objective="binary", verbose=-1, random_state=0, n_jobs=-1)
-    def oof(cols, grp):
-        p = np.zeros(len(R))
+    # Two candidate context models, both scored out of fold with GroupKFold by rusher: a strongly regularized gradient-boosted
+    # model and a ridge-penalized logistic regression. The one with the lower out-of-fold log loss is used; if neither beats
+    # the league rate, xP is the league rate (context adds nothing on true dropbacks) and the POE checks reduce to the baseline.
+    prm = dict(n_estimators=200, learning_rate=0.03, num_leaves=7, min_child_samples=300, subsample=0.8, subsample_freq=1, colsample_bytree=0.8, reg_lambda=20.0, objective="binary", verbose=-1, random_state=0, n_jobs=-1)
+    from sklearn.preprocessing import StandardScaler
+    def design(cols):
+        Xn = R[[c for c in cols if c not in cats]].copy()
+        for c in list(Xn.columns):
+            if Xn[c].isna().all(): Xn = Xn.drop(columns=[c]); continue
+            if Xn[c].isna().any(): Xn[c + "_miss"] = Xn[c].isna().astype(int); Xn[c] = Xn[c].fillna(Xn[c].median())
+        Xc = pd.get_dummies(R[[c for c in cols if c in cats]].astype(str), dtype=float)
+        return pd.concat([Xn, Xc], axis=1).astype(float)
+    def oof(cols, grp, kind):
+        p = np.zeros(len(R)); X = design(cols) if kind == "logit" else R[cols]
         for a_, b_ in GroupKFold(5).split(R, R.pres, grp):
-            m = lgb.LGBMClassifier(**prm).fit(R.iloc[a_][cols], R.pres.iloc[a_]); p[b_] = m.predict_proba(R.iloc[b_][cols])[:, 1]
+            if kind == "gbm": m = lgb.LGBMClassifier(**prm).fit(X.iloc[a_], R.pres.iloc[a_]); p[b_] = m.predict_proba(X.iloc[b_])[:, 1]
+            else:
+                sc = StandardScaler().fit(X.iloc[a_]); m = LogisticRegression(C=0.1, max_iter=3000).fit(sc.transform(X.iloc[a_]), R.pres.iloc[a_]); p[b_] = m.predict_proba(sc.transform(X.iloc[b_]))[:, 1]
         return p
-    R["xp"] = oof(FULL, R.nfl_id); R["xp_nodb"] = oof(NODB, R.nfl_id); xp_game = oof(FULL, R.game_id)
     base = R.pres.mean(); ll0 = log_loss(R.pres, np.full(len(R), base))
-    mf = lgb.LGBMClassifier(**prm).fit(R[FULL], R.pres); imp = dict(sorted(zip(FULL, mf.booster_.feature_importance("gain") / mf.booster_.feature_importance("gain").sum()), key=lambda kv: -kv[1]))
+    cand = {k: oof(FULL, R.nfl_id, k) for k in ("gbm", "logit")}; cand_ll = {k: float(log_loss(R.pres, v)) for k, v in cand.items()}
+    best = min(cand_ll, key=cand_ll.get)
+    if cand_ll[best] >= ll0: best = "league rate"; R["xp"] = base
+    else: R["xp"] = cand[best]
+    R["xp_nodb"] = oof(NODB, R.nfl_id, best) if best != "league rate" else base
+    xp_game = oof(FULL, R.game_id, best) if best != "league rate" else np.full(len(R), base)
+    if best == "gbm":
+        mf = lgb.LGBMClassifier(**prm).fit(R[FULL], R.pres); imp = dict(sorted(zip(FULL, mf.booster_.feature_importance("gain") / mf.booster_.feature_importance("gain").sum()), key=lambda kv: -kv[1]))
+    elif best == "logit":
+        Xd = design(FULL); sc = StandardScaler().fit(Xd); mf = LogisticRegression(C=0.1, max_iter=3000).fit(sc.transform(Xd), R.pres); imp = dict(sorted(zip(Xd.columns, np.abs(mf.coef_[0])), key=lambda kv: -kv[1]))
+    else: imp = {}
     dec = pd.qcut(R.xp, 10, duplicates="drop"); cal = R.groupby(dec).agg(pred=("xp", "mean"), obs=("pres", "mean"))
-    res["xp"] = dict(n=len(R), base_rate=float(base), auc_player_cv=float(roc_auc_score(R.pres, R.xp)), auc_game_cv=float(roc_auc_score(R.pres, xp_game)), auc_no_dropback=float(roc_auc_score(R.pres, R.xp_nodb)),
-                     logloss_null=float(ll0), logloss_model=float(log_loss(R.pres, R.xp)), logloss_gain_pct=float(100 * (ll0 - log_loss(R.pres, R.xp)) / ll0), calib_max_gap=float((cal.pred - cal.obs).abs().max()),
+    res["xp"] = dict(n=len(R), base_rate=float(base), model=best, candidate_logloss=cand_ll, auc_player_cv=float(roc_auc_score(R.pres, R.xp)), auc_game_cv=float(roc_auc_score(R.pres, xp_game)), auc_no_dropback=float(roc_auc_score(R.pres, R.xp_nodb)),
+                     logloss_null=float(ll0), logloss_model=float(log_loss(R.pres, R.xp)), logloss_gain_pct=float(100 * (ll0 - log_loss(R.pres, R.xp)) / ll0), calib_max_gap=float(np.nan_to_num((cal.pred - cal.obs).abs().max(), nan=0.0)),
                      opp_ol_known_share=float(R.ol_d1.notna().mean()), importance={k: float(v) for k, v in list(imp.items())[:8]})
     print(json.dumps(res["xp"], indent=1, default=float))
     XP = R[KEYS + ["xp", "xp_nodb", "ol_d1", "ol_n2", "dbd"]]
@@ -498,12 +551,12 @@ try:
         D = globals()[nm].merge(XP, on=KEYS, how="left").reset_index(drop=True); D["poe"] = D.pres - D.xp; D["lxp"] = logit(D.xp.clip(1e-4, 1 - 1e-4)); D["lxp_nd"] = logit(D.xp_nodb.clip(1e-4, 1 - 1e-4)); globals()[nm] = D
     poe = {}
     for nm, D in (("interior", IL5), ("edge", ED5)):
-        go = smf.gee("pres ~ vs + wz + pickz + az", groups="nfl_id", data=D, family=sm.families.Binomial(), offset=D.lxp.values).fit()
-        go_nd = smf.gee("pres ~ vs + wz + pickz + az", groups="nfl_id", data=D, family=sm.families.Binomial(), offset=D.lxp_nd.values).fit()
-        gl = G("poe ~ vs + wz + pickz + az", D, sm.families.Gaussian()); gl0 = G("poe ~ vs", D, sm.families.Gaussian())
+        go = smf.gee("pres ~ vs + wz + pickz + az + C(dy)", groups="nfl_id", data=D, family=sm.families.Binomial(), offset=D.lxp.values).fit()
+        go_nd = smf.gee("pres ~ vs + wz + pickz + az + C(dy)", groups="nfl_id", data=D, family=sm.families.Binomial(), offset=D.lxp_nd.values).fit()
+        gl = G("poe ~ vs + wz + pickz + az + C(dy)", D, sm.families.Gaussian()); gl0 = G("poe ~ vs", D, sm.families.Gaussian())
         poe[nm] = dict(or_offset=orci(go), or_offset_no_dropback=orci(go_nd), poe_pp_per_unit=dict(b=float(gl.params["vs"] * 100), lo=float((gl.params["vs"] - 1.96 * gl.bse["vs"]) * 100), hi=float((gl.params["vs"] + 1.96 * gl.bse["vs"]) * 100), p=float(gl.pvalues["vs"])),
                        poe_pp_no_controls=dict(b=float(gl0.params["vs"] * 100), p=float(gl0.pvalues["vs"])))
-    res["poe"] = poe; Rb["LightGBM context-adjusted (xP offset)"] = poe["interior"]["or_offset"]; Rb["xP offset without time-to-throw"] = poe["interior"]["or_offset_no_dropback"]
+    res["poe"] = poe; Rb["Context-adjusted (xP offset)"] = poe["interior"]["or_offset"]   # the time-to-throw-free variant is identical (dropback_duration is empty on defender rows) and kept in res["poe"] only
     print(json.dumps(poe, indent=1, default=float))
 except Exception as e: fail("5.3_xp", e)
 
@@ -749,10 +802,10 @@ for a, lab, col in [(ax[0], "INT", BLUE), (ax[1], "EDGE", ORANGE)]:
     a.plot(d["speeds"], np.full(len(d["speeds"]), 0.35), "|", color=MUTED, ms=9, alpha=0.7); a.set_xlabel("Combine top speed (yd/s)  [stopwatch 40 equivalent]")
     tk = np.array([9.0, 9.5, 10.0, 10.5, 11.0]); tk = tk[(tk >= g_.min() - 0.01) & (tk <= g_.max() + 0.01)]; a.set_xticks(tk); a.set_xticklabels([f"{t:.1f}\n[{np.polyval(co, t):.2f}s]" for t in tk]); a.set_ylim(0, 16)
 ax[0].set_ylabel("Adjusted pressure rate per rush snap (%)"); nn = res["n"]; pq = res["p10_p90"]
-headline(ax[0], "Interior DL: faster is better", f"{nn['int_players']} players, {nn['int_snaps']:,} rushes"); headline(ax[1], "Edge rushers: no speed signal", f"{nn['edge_players']} players, {nn['edge_snaps']:,} rushes")
+headline(ax[0], "Interior DL: faster is better", f"{nn['int_players']} players, {nn['int_snaps']:,} rushes"); headline(ax[1], "Edge rushers: no detectable speed signal", f"{nn['edge_players']} players, {nn['edge_snaps']:,} rushes; OR {res['table1']['edge_pressure']['OR']:.2f}, p = {res['table1']['edge_pressure']['p']:.2f}")
 ax[0].annotate(f"{pq['rate10']*100:.1f}%", (pq["v10"], pq["rate10"] * 100), xytext=(-4, -22), textcoords="offset points", color=BLUE, fontweight="bold", ha="center")
 ax[0].annotate(f"{pq['rate90']*100:.1f}%", (pq["v90"], pq["rate90"] * 100), xytext=(0, 12), textcoords="offset points", color=BLUE, fontweight="bold", ha="center")
-fig.text(0.012, 0.03, "Adjusted for weight, arm length, draft slot, down and distance; band = 95% player-cluster bootstrap CI. Ticks along the bottom: individual players.", fontsize=8.5, color=INK2); fig.tight_layout(); save(fig, "fig4_dose.png")
+fig.text(0.012, 0.03, "Adjusted for weight, arm length, draft slot, draft class, down and distance; band = 95% player-cluster bootstrap CI. Ticks along the bottom: individual players.", fontsize=8.5, color=INK2); fig.tight_layout(); save(fig, "fig4_dose.png")
 
 # %% [markdown]
 # **Figure 5.** Stress tests.
@@ -763,7 +816,7 @@ for yy, (k, v) in zip(y[:-1], rows_):
     ax.hlines(yy, v["lo"], v["hi"], color=BLUE, lw=2.2); ax.plot(v["OR"], yy, "o", color=BLUE, ms=7.5, mec=SURF, mew=1.4); ax.text(XR + 0.03, yy, f"{v['OR']:.2f}  [{v['lo']:.2f}, {v['hi']:.2f}]", va="center", fontsize=9, color=INK2)
 ax.hlines(y[-1], nloo[0], nloo[1], color=BLUE, lw=5, alpha=0.5); ax.text(XR + 0.03, y[-1], f"range {nloo[0]:.2f} to {nloo[1]:.2f}", va="center", fontsize=9, color=INK2)
 ax.set_yticks(y); ax.set_yticklabels([k for k, _ in rows_] + ["Drop any single player (all refits)"], fontsize=9.5); ax.axvline(1, color=INK2, lw=1.2, ls="--"); ax.set_xlim(0.9, XR); ax.set_xlabel("Odds ratio of generating pressure per +0.5 yd/s top speed (stopwatch row: per 0.2 s faster)"); ax.grid(axis="y", visible=False)
-headline(ax, "The interior DL speed effect survives every stress test", "Odds ratio with 95% CI; 1.0 = no effect"); fig.tight_layout(); save(fig, "fig5_robust.png", right=0.74)
+headline(ax, "The interior DL speed effect holds across every specification", f"Odds ratio with 95% CI; 1.0 = no effect. Point estimates {min(v['OR'] for v in rb.values()):.2f} to {max(v['OR'] for v in rb.values()):.2f}; {sum(v['lo'] <= 1 for v in rb.values())} of {len(rb)} intervals touch 1.0"); fig.tight_layout(); save(fig, "fig5_robust.png", right=0.74)
 
 # %% [markdown]
 # **Figure 6.** Interior linemen who are fast for their size and produce more than their draft slot and size predict.

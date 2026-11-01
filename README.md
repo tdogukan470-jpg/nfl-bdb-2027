@@ -5,21 +5,29 @@ Entry for the Kaggle **NFL Big Data Bowl 2027** (Open track) by Doğukan Turan.
 - Kaggle writeup: https://www.kaggle.com/competitions/nfl-big-data-bowl-2027/writeups/speed-travels-nfl-pass-rush
 - Kaggle notebook (rebuilds every number and figure from the competition files): https://www.kaggle.com/code/doukanturan/nfl-bdb27-speed-travels
 
-## One-paragraph summary
+## Summary
 
-At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch time: r = -0.98). For **interior defensive linemen** (88 players, 14,868 rushes) each +0.5 yd/s of Combine top speed raises the odds of generating pressure by 22% (OR 1.22, 95% CI 1.12 to 1.33). Moving from the 10th to the 90th percentile of speed moves the adjusted pressure rate from 5.2% to 9.3%. The effect survives sensor cleaning (Savitzky-Golay and a 2.5 g limiter), inverse-probability weighting and a Heckman-type control function for selection into the NFL, a LightGBM expected-pressure (xP) context model (POE OR 1.20), and Beta-Binomial hierarchical shrinkage (OR 1.20, LR p = 0.009). Formal Imai-Keele-Tingley mediation puts 18% (5% to 42%) of the effect through a faster get-off. **Edge rushers, offensive linemen and WR/TE show no detectable speed effect**; on the edge, speed does reach the field but is spent on less direct paths (inconsistent mediation). Drill "first-step" numbers have reliability of 0.36 to 0.54 and do not travel to games.
+At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch time: r = -0.98). For **interior defensive linemen** (75 players, 9,378 regular-season dropback rushes) each +0.5 yd/s of Combine top speed raises the odds of generating pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34), with weight, arm length, draft slot, draft class, down and distance held fixed. From the 10th to the 90th percentile of speed the adjusted pressure rate moves from 6.3% to 11.4%. The effect survives sensor cleaning (Savitzky-Golay and a 2.5 g limiter), inverse-probability weighting and a Heckman-type control function for selection into the NFL, a cross-validated expected-pressure context model (POE OR 1.22) and Beta-Binomial shrinkage. Imai-Keele-Tingley mediation puts 20% (9% to 43%) of the effect through a faster get-off. **Edge rushers, offensive linemen and WR/TE show no detectable speed effect**; on the edge, speed reaches the field but is spent on less direct paths. Drill "first-step" numbers have test-retest reliability of 0.36 to 0.54 and do not travel to games.
 
 ## Headline table
 
 | Group | Outcome | Players / snaps | Effect of +0.5 yd/s top speed (95% CI) | p |
 |---|---|---|---|---|
-| Interior DL | Pressure per rush | 88 / 14,868 | OR 1.22 [1.12, 1.33] | <0.001 |
-| Edge | Pressure per rush | 121 / 19,322 | OR 1.05 [0.96, 1.14] | 0.30 |
-| OL (T, G, C) | Pressure allowed per block | 94 / 48,404 | OR 1.03 [0.93, 1.14] | 0.58 |
-| WR / TE | Separation at pass forward (yd) | 123 / 35,252 | +0.008 [-0.052, +0.067] | 0.80 |
-| WR / TE, deep | Separation at pass forward (yd) | 122 / 13,020 | +0.016 [-0.060, +0.092] | 0.68 |
+| Interior DL | Pressure per rush | 75 / 9,378 | OR 1.22 [1.12, 1.34] | <0.001 |
+| Edge | Pressure per rush | 95 / 10,448 | OR 1.07 [0.96, 1.19] | 0.20 |
+| OL (T, G, C) | Pressure allowed per block | 72 / 38,854 | OR 1.02 [0.92, 1.14] | 0.67 |
+| WR / TE | Separation at pass forward (yd) | 102 / 29,670 | -0.011 [-0.071, +0.049] | 0.72 |
+| WR / TE, deep | Separation at pass forward (yd) | 100 / 10,978 | -0.008 [-0.089, +0.073] | 0.85 |
 
-112 tests in total (15 headline, 76 mechanism, 21 robustness); 66 have Benjamini-Hochberg q < 0.05. Every interior headline test has q < 0.001 except the Beta-Binomial test (q = 0.017). No edge, OL or WR headline test has q below 0.4.
+113 tests in total (15 headline, 76 mechanism, 22 robustness); 61 have Benjamini-Hochberg q < 0.05.
+
+## Data hygiene
+
+- Regular-season games only (`games.season_type == "REG"`); the files also hold preseason and playoff games (21% of player-play rows).
+- Dropbacks only: rushes are kept when the play has a recorded `pass_result` (the host's definition of a dropback). `player_get_off` is also populated on run plays, where pressure cannot occur.
+- Ball frames (`entity_type == "BALL"`) removed from the Combine file; the Combine `dis` column is not used.
+- Draft-class fixed effects in every model: the 2025 Combine export is stored at full precision while 2023-24 positions sit on a 1/60-yd grid.
+- Per-play intermediate tables are cached outside the published notebook output; only aggregates, figures and `results.json` are saved.
 
 ## Figures
 
@@ -35,11 +43,11 @@ At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch 
 1. **Combine features from raw 10 Hz traces**: start of motion, peak speed over 30 yd, speed at 10 yd, 10 to 30 yd split, acceleration time constant; test-retest reliability from repeat attempts.
 2. **Sensor audit**: all 793 forty-yard attempts (2023 to 2025) scanned for frames above 3.5 g; none found in the 40-yard window. Features rebuilt with a Savitzky-Golay derivative filter and a 2.5 g slew limiter as a check.
 3. **Outcomes from game tracking**: pressure per pass rush (interior DL, edge), pressure allowed per block (OL), route- and coverage-adjusted separation at pass-forward (WR/TE).
-4. **Main model**: logistic GEE on snaps with standard errors clustered by player; controls for weight, arm length, log draft slot, down and distance. Cluster bootstrap, permutation test, leave-one-player-out, team and opponent fixed effects, alternative outcome definitions, per-season fits.
-5. **Selection**: cross-fitted logistic selection model over all 510 prospects (AUC 0.97 / 0.99), inverse-probability-weighted GEE, Heckman-type control function with draft class as the excluded variable.
-6. **Context model**: LightGBM expected pressure (xP) on 34,190 rushes with GroupKFold by rusher (and by game as a check); Pressure Over Expected; GEE with logit(xP) offset; Beta-Binomial empirical-Bayes shrinkage of player POE.
+4. **Main model**: logistic GEE on snaps with standard errors clustered by player; controls for weight, arm length, log draft slot, draft class, down and distance. Cluster bootstrap, permutation test, leave-one-player-out, team and opponent fixed effects, alternative outcome definitions, per-season fits, all-games-included fit.
+5. **Selection**: cross-fitted logistic selection model over all 510 prospects, inverse-probability-weighted GEE, Heckman-type control function with draft class as the excluded variable.
+6. **Context model**: expected pressure (xP) chosen out of fold (GroupKFold by rusher) between a regularized LightGBM and a ridge logistic regression; Pressure Over Expected; GEE with logit(xP) offset; Beta-Binomial empirical-Bayes shrinkage of player POE.
 7. **Mediation**: Imai-Keele-Tingley quasi-Bayesian mediation (1,000 draws, cluster-robust covariances) on the risk-difference scale; mediators are get-off, speed at 1 s, path efficiency, depth and width over the first 2 s.
-8. **Multiple testing**: Benjamini-Hochberg FDR over all 112 tests, by family.
+8. **Multiple testing**: Benjamini-Hochberg FDR over all tests, by family.
 9. **Out-of-time check**: fit through 2024, test on 2025.
 10. **Decision matrix**: 10 to 30 yd split cuts, weight bands, and edge path-efficiency cells with POE and bootstrap intervals.
 
@@ -47,24 +55,21 @@ At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch 
 
 ```
 notebook/   speed-travels.ipynb (the Kaggle notebook), speed_travels.py (same code as a script), kernel-metadata.json
-writeup/    writeup.md (the submitted text, about 1,940 words), EMBED_FIGURES.md
+writeup/    writeup.md (the submitted text), writeup_template.md and fill_writeup.py (every number is filled from results.json)
 figures/    fig1 to fig7, 16:9 at 3200x1800
 results/    results.json (every number quoted in the writeup), table1.csv
 ```
 
 ## Reproducing
 
-The competition data is only available inside Kaggle. Attach the `nfl-big-data-bowl-2027` competition dataset and run `notebook/speed-travels.ipynb` on a CPU kernel (no internet needed); it writes `results.json`, `table1.csv` and the seven figures. Or push it with the Kaggle CLI:
+The competition data is only available inside Kaggle. Attach the `nfl-big-data-bowl-2027` competition dataset and run `notebook/speed-travels.ipynb` on a CPU kernel (no internet needed, about 20 minutes); it writes `results.json`, `table1.csv` and the seven figures. Or push it with the Kaggle CLI:
 
 ```
 kaggle kernels push -p notebook
+python3 writeup/fill_writeup.py results/results.json writeup/writeup_template.md writeup/writeup.md
 ```
 
 Python packages used: pandas, numpy, pyarrow, scipy, statsmodels, scikit-learn, lightgbm, matplotlib.
-
-## Limitations (stated in the writeup)
-
-Observational data; 88 interior and 121 edge players; the sensor audit covers the 40-yard window only; no quarterback tracking, time to throw or line-up depth, so double-team and alignment are proxies; edge and OL nulls mean no detectable linear speed effect, not zero.
 
 ## License
 
