@@ -1,0 +1,6 @@
+id,date,hypothesis,change,seed,runtime_min,interior_OR,interior_CI,xP_AUC,xP_logloss_gain_pct,decision,notes
+v12,2026-10-21,baseline before audit fixes,all games; get-off rows incl. run plays; no class FE; LightGBM xP,0,~60,1.22,"1.12-1.33",0.636,2.9,REJECT (superseded),xP inflated by run plays; preseason included; per-play parquet in outputs
+v13,2026-11-01,REG+dropback+class FE keep the interior effect,REG only; pass_result filter; C(dy); caches to /kaggle/temp,0,20,1.22,"1.12-1.34",0.566,-0.03,RETEST,effect holds; LightGBM worse than null on dropbacks
+v14,2026-11-01,out-of-fold model choice fixes xP,GBM vs ridge logistic vs league rate by OOF log loss,0,16,1.22,"1.12-1.34",0.584,1.11,KEEP,logistic chosen; POE OR 1.22
+v15,2026-11-01,label fix only,robustness row renamed; duplicate xP row dropped,0,19,1.22,"1.12-1.34",0.584,1.11,KEEP,113 tests / 61 q<0.05
+v16,2026-11-01,figure honesty,Fig 4 edge title; Fig 5 headline + subtitle counts; footnote adds draft class,0,19,1.22,"1.12-1.34",0.584,1.11,KEEP (current best),numbers identical to v14/v15

@@ -43,12 +43,12 @@ For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure 
 | WR / TE, deep | Separation (yd) | 100 / 10,978 | -0.008 [-0.089, +0.073] | 0.85 |
 
 ![Fig. 4: Pressure rate vs Combine top speed (interior DL vs edge)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig4_dose.png)
-*Figure 4. Adjusted pressure rate against Combine top speed with cluster-bootstrap bands. Interior linemen rise across the speed range; edge rushers are flat.*
+*Figure 4. Adjusted pressure rate against Combine top speed with cluster-bootstrap bands. Interior linemen rise across the speed range; the edge slope is not distinguishable from zero.*
 
 **Stress tests (Fig. 5).** Team fixed effects give OR 1.16, opposing-offense effects 1.26, formation and alignment 1.22, without class effects 1.20. Outcome variants: quick pressure 1.30, late 1.18, hurry 1.23, sack 1.27. Each season alone: 1.23, 1.16, 1.28. Dropping any single player: 1.19 to 1.25. A permutation test gives p < 0.001. Point estimates stay above 1.15; only team fixed effects, sacks and the 2024 season alone, the thinnest checks, have intervals touching 1.0.
 
 ![Fig. 5: Robustness checks (sensor, selection, xP, seasons)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig5_robust.png)
-*Figure 5. The interior effect under every specification we tried: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model. 1.0 is no effect.*
+*Figure 5. The interior effect under every specification: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model. 1.0 is no effect; three thin checks have intervals touching it.*
 
 **Top speed, not burst.** Splitting the signal, top speed carries the effect (OR 1.21) and burst carries none (OR 1.03, p = 0.54); the stopwatch 10-yard split adds nothing once the 40 is in (p = 0.35). Interior rushers who reach and hold high speed win more often than those who merely start quickly, against the usual emphasis on the first 10 yards.
 
