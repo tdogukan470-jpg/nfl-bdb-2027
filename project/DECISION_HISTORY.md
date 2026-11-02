@@ -5,3 +5,4 @@
 - 2026-11-01: Figures embedded inline from the public GitHub mirror; gallery kept as a Kaggle-hosted copy.
 - 2026-11-01: Figure headlines softened to match the evidence (three robustness intervals touch 1.0; edge slope not distinguishable from zero).
 - 2026-11-01: References moved to an in-writeup appendix (excluded from the word count by the host).
+- 2026-11-03: Drill-translation section moved before Method so figures appear in order 1-7 (live page verified). Writeup body now loaded into Kaggle from the GitHub raw file, so the published text and writeup/writeup.md are byte-identical.
