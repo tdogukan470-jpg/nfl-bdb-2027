@@ -688,6 +688,12 @@ try:
                          diff=pt(fast) - pt(slow), diff_lo=float(np.nanpercentile(dif, 2.5)), diff_hi=float(np.nanpercentile(dif, 97.5)), vpk_fast=float(Pl.vpk[Pl.s1030 <= c].mean()), w_fast=float(Pl.w[Pl.s1030 <= c].mean())))
     mat["interior_cuts"] = rows; ok = [r for r in rows if r["fast_lo"] > 0]; bad = [r for r in rows if r["slow_hi"] < 0]
     mat["interior_green_cut"] = max(r["cut"] for r in ok) if ok else None; mat["interior_red_cut"] = min(r["cut"] for r in bad) if bad else None
+    # POE of every band between consecutive cut-offs (lo, hi], so a middle band is read directly, not inferred from cumulative groups
+    edges = [-np.inf] + list(cuts) + [np.inf]; mat["interior_bands"] = []
+    for lo_, hi_ in zip(edges[:-1], edges[1:]):
+        m_ = ((Pl.s1030.values > lo_) & (Pl.s1030.values <= hi_)).astype(float)
+        if m_.sum() < 3: continue
+        eb_ = est(m_, idx); mat["interior_bands"].append(dict(lo=float(lo_) if np.isfinite(lo_) else None, hi=float(hi_) if np.isfinite(hi_) else None, n=int(m_.sum()), poe=pt(m_), poe_lo=float(np.nanpercentile(eb_, 2.5)), poe_hi=float(np.nanpercentile(eb_, 97.5))))
     wq = np.percentile(Pl.w, [33, 67]); bands = {"light (3-tech-type)": Pl.w <= wq[0], "mid": (Pl.w > wq[0]) & (Pl.w <= wq[1]), "heavy (nose-type)": Pl.w > wq[1]}; mat["weight_cut_lb"] = [float(x) for x in wq]; mat["weight_bands"] = {}
     for bn, bm in bands.items():
         S_ = Pl[bm.values].reset_index(drop=True)
@@ -723,6 +729,36 @@ try:
         geom2[nm] = {c: dict(mean=float(D[c].mean()), sd=float(D[c].std())) for c in ["path_eff_20", "adx_20", "ady_20", "disp_20", "s_10", "s_20"] if c in D.columns}
     res["mech_geom"] = {**{k: v for k, v in geom.items()}, "detail": geom2}
 except Exception as e: fail("5.7_geom", e)
+
+# %% [markdown]
+# ### 5.8 Leave-one-draft-class-out check
+# The out-of-time check in 3.6 splits by season, so the same players appear on both sides. Here each draft class is held out in turn: the model is fit on the other two classes' rushes and predicts the held-out players, who never entered training. We compare draft slot + size against draft slot + size + Combine speed on held-out log loss and on the player-level Spearman correlation (players with 75+ rushes), with a player bootstrap.
+
+# %%
+try:
+    feats0 = ["down3", "ytg", "pickz", "wz", "az"]; feats1 = feats0 + ["vs"]; loco = {"by_class": {}}; preds = []
+    for cls in sorted(IL.dy.unique()):
+        tr, te = IL[IL.dy != cls].copy(), IL[IL.dy == cls].copy()
+        if te.nfl_id.nunique() < 8: continue
+        for c in ["wz", "pickz", "az"]:
+            mu_, sd_ = tr[c].mean(), tr[c].std(); tr[c] = (tr[c] - mu_) / sd_; te[c] = (te[c] - mu_) / sd_
+        p0 = LogisticRegression(C=1e6, max_iter=1000).fit(tr[feats0], tr.pres).predict_proba(te[feats0])[:, 1]
+        p1 = LogisticRegression(C=1e6, max_iter=1000).fit(tr[feats1], tr.pres).predict_proba(te[feats1])[:, 1]
+        g_ = G(f"pres ~ vs + {b_noclass}", tr); loco["by_class"][str(int(cls))] = dict(train_or=orci(g_), test_players=int(te.nfl_id.nunique()), test_snaps=int(len(te)), ll0=float(log_loss(te.pres, p0)), ll1=float(log_loss(te.pres, p1)))
+        preds.append(pd.DataFrame({"nfl_id": te.nfl_id.values, "y": te.pres.values, "p0": p0, "p1": p1, "cls": int(cls)}))
+    PR = pd.concat(preds, ignore_index=True)
+    def loco_stats(D):
+        A = D.groupby("nfl_id").agg(y=("y", "mean"), p0=("p0", "mean"), p1=("p1", "mean"), n=("y", "size")); A = A[A.n >= 75]
+        return log_loss(D.y, D.p0) - log_loss(D.y, D.p1), spearmanr(A.y, A.p0)[0], spearmanr(A.y, A.p1)[0], len(A)
+    dll, r0, r1, na = loco_stats(PR); loco.update(dll=float(dll), rho0=float(r0), rho1=float(r1), n_eval=int(na), n_players=int(PR.nfl_id.nunique()), n_snaps=int(len(PR)))
+    ids_ = PR.nfl_id.unique(); grp_ = {i: np.where(PR.nfl_id.values == i)[0] for i in ids_}; rng_ = np.random.default_rng(17); bd, br = [], []
+    for _ in range(300 if FAST else 1000):
+        ix_ = np.concatenate([grp_[i] for i in rng_.choice(ids_, len(ids_))]); D_ = PR.iloc[ix_]
+        d_, a_, c_, n_ = loco_stats(D_); bd.append(d_)
+        if n_ > 8: br.append(c_ - a_)
+    loco.update(dll_ci=[float(np.percentile(bd, 2.5)), float(np.percentile(bd, 97.5))], dll_pos_share=float(np.mean(np.array(bd) > 0)), drho_ci=[float(np.percentile(br, 2.5)), float(np.percentile(br, 97.5))], drho_pos_share=float(np.mean(np.array(br) > 0)))
+    res["loco"] = loco; print(json.dumps(loco, indent=1, default=float))
+except Exception as e: fail("5.8_loco", e)
 
 # %%
 json.dump(res, open(f"{WORK}/results.json", "w"), indent=1, default=float); log("results saved")

@@ -4,7 +4,7 @@
 
 ## 1. The question
 
-Teams read Combine tracking as a proxy for how a player will move on Sundays. We ask which movement traits carry over to regular-season performance, and where they do not; a scouting number that is wrong for half the positions is dangerous, so the boundaries matter as much as the finding.
+Teams read Combine tracking as a proxy for how a player will move on Sundays. We ask which movement traits carry over to regular-season performance and where they do not; for a scout the boundaries matter as much as the finding.
 
 Two decades of Combine studies found little: the tests explain a few percent of season-level production, with sprint speed for running backs the usual exception [1-4]. That null is partly measurement: season totals mix talent with opportunity, a stopwatch gives one number per drill, and most studies pool positions. We use per-snap outcomes from game tracking, movement rebuilt from the 10 Hz trace, one position group at a time, with size and draft slot held fixed.
 
@@ -24,11 +24,18 @@ From each 10 Hz 40-yard trace we rebuilt start of motion, peak speed over 30 yd,
 
 **Data hygiene.** The game files also hold preseason and playoff games (21% of player-play rows); every number below uses regular-season dropbacks only. Including every game gives OR 1.23.
 
-## 3. Method
+## 3. Drill numbers do not travel (Fig. 3)
+
+For 59 linemen with both drill traces and game tracking, the 40's top speed correlates r = 0.77 with game speed one second after the snap, but within interior linemen only r = 0.39 and within edge r = 0.37. The drill's first-step speed correlates r = 0.13 (CI -0.22 to 0.52). Trust the 40's speed trace; single-attempt drill first-step numbers are too noisy to use alone.
+
+![Fig. 3: Does Combine speed translate to in-game speed?](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig3_translation.png)
+*Figure 3. Combine measures against in-game speed one second after the snap: the 40's top speed (left) carries over, the pass-rush drill's first step (right) does not.*
+
+## 4. Method
 
 From 2023 to 2025 regular-season tracking we computed pressure per pass rush (interior DL, edge), pressure allowed per block (OL) and separation at pass-forward for WR/TE adjusted for route and coverage. The Combine feature is mean top speed across a player's 40 attempts, in units of +0.5 yd/s, about 0.2 s on the stopwatch at a lineman's speed. Models are logistic GEE with standard errors clustered by player [8], controlling for weight, arm length, log draft slot, draft class, down and distance. Speed and weight correlate at -0.83 among interior linemen, so size is always in the model.
 
-## 4. Result: interior defensive linemen
+## 5. Result: interior defensive linemen
 
 For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34). From the 10th to the 90th percentile of speed (9.1 to 10.7 yd/s) the adjusted pressure rate moves from 6.3% to 11.4%, a ratio of 1.8 (CI 1.1 to 2.8; Fig. 4). In scouting terms: between two interior prospects of the same weight, arm length and draft range, 0.2 s on the 40 is worth about 1.4 pressures per 100 rushes, roughly 7 over a 500-rush season.
 
@@ -52,13 +59,13 @@ For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure 
 
 **Top speed, not burst.** Splitting the signal, top speed carries the effect (OR 1.21) and burst carries none (OR 1.03, p = 0.54); the stopwatch 10-yard split adds nothing once the 40 is in (p = 0.35). Interior rushers who reach and hold high speed win more often than those who merely start quickly, against the usual emphasis on the first 10 yards.
 
-## 5. Selection bias: we only see players who reached the field
+## 6. Selection bias: we only see players who reached the field
 
 Of 510 prospects, 79% appear in game tracking but only 105 (21%) rush the passer and 48 (9%) rush 100+ times. We modeled each prospect's probability of being observed from measurables, draft slot, position and class (cross-fitted, AUC 0.96 and 0.97) and weighted by its inverse; a Heckman-type control function [7] adds the probit inverse Mills ratio, with draft class (the observation window) as the excluded variable. IPW OR 1.17 (CI 1.04 to 1.33) and 1.17 (1.04 to 1.33); control function OR 1.22 and 1.19, with Mills ratio coefficients far from significant (p = 0.16 and 0.63). Selection is mostly position and draft slot; correcting for it moves the estimate little.
 
-## 6. Context model: Pressure Over Expected
+## 7. Context model: Pressure Over Expected
 
-We built an expected-pressure (xP) model on 19,826 dropback rushes from down, distance, quarter, clock, score, win probability, expected points, formation, alignment and the distance to the nearest tracked opposing lineman (a double-team proxy, known on 69% of snaps). Two candidates, a regularized LightGBM [10] and a ridge logistic regression, are scored out of fold with folds grouped by rusher, so no player trains the model that scores him. The logistic regression wins and is kept. Out of fold, AUC is 0.58 (grouped by game, 0.58), log loss improves 1.1% over the league rate and the worst decile miscalibration is 0.9 points: on true dropbacks, pre-snap context predicts which rusher gets home only weakly, so POE stays close to the raw rate.
+We built an expected-pressure (xP) model on 19,826 dropback rushes from down, distance, quarter, clock, score, win probability, expected points, formation, alignment and the distance to the nearest tracked opposing lineman (a double-team proxy, known on 69% of snaps). A regularized LightGBM [10] and a ridge logistic regression compete out of fold, with folds grouped by rusher so no player trains the model that scores him. The logistic regression wins. Out of fold, AUC is 0.58 (grouped by game, 0.58), log loss improves 1.1% over the league rate and the worst decile miscalibration is 0.9 points: on true dropbacks, pre-snap context predicts which rusher gets home only weakly, so POE stays close to the raw rate.
 
 Pressure Over Expected (POE) is pressure minus xP. With xP as an offset, interior speed gives OR 1.22 (1.12 to 1.33): +0.5 yd/s adds 1.4 points of POE per 100 rushes (0.8 to 2.0). Edge: OR 1.05 (0.94 to 1.18).
 
@@ -67,7 +74,7 @@ Pressure Over Expected (POE) is pressure minus xP. With xP as an offset, interio
 ![Fig. 6: Scouting view, interior DL vs expectation](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig6_scouting.png)
 *Figure 6. Scouting view: every interior lineman with 100+ rushes, pressure rate against the rate that draft slot and size predict, colored by Combine top speed. Fast-for-weight players sit above the line. An illustration of the method, not a recommendation list: single player-seasons are noisy.*
 
-## 7. How speed becomes pressure: formal mediation
+## 8. How speed becomes pressure: formal mediation
 
 Imai-Keele-Tingley causal mediation [5], 1,000 quasi-Bayesian draws with cluster-robust covariances, on the risk-difference scale per +0.5 yd/s.
 
@@ -75,16 +82,9 @@ Imai-Keele-Tingley causal mediation [5], 1,000 quasi-Bayesian draws with cluster
 
 **Edge: suppression.** Faster edge rushers do run faster in-game (ACME through speed at 1 s +0.69 [0.32, 1.08]), but they take less direct paths: path efficiency carries an ACME of -0.41 [-0.86, -0.13] against a direct effect of +1.22 [0.14, 2.40], total +0.79 [-0.40, 1.98]. Speed helps, the route spends it, and the edge total looks null. Mediator and outcome come from the same snap, so these hold only if no unmeasured factor drives both.
 
-## 8. Drill numbers do not travel (Fig. 3)
-
-For 59 linemen with both drill traces and game tracking, the 40's top speed correlates r = 0.77 with game speed one second after the snap, but within interior linemen only r = 0.39 and within edge r = 0.37. The drill's first-step speed correlates r = 0.13 (CI -0.22 to 0.52). Trust the 40's speed trace; single-attempt drill first-step numbers are too noisy to use alone.
-
-![Fig. 3: Does Combine speed translate to in-game speed?](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig3_translation.png)
-*Figure 3. Combine measures against in-game speed one second after the snap: the 40's top speed (left) carries over, the pass-rush drill's first step (right) does not.*
-
 ## 9. Out-of-time check and multiple testing
 
-We fit through 2024 and test 2025 (Fig. 7). For 22 interior linemen with 75+ snaps, adding speed lifts the player-level Spearman correlation from 0.67 to 0.72; the log-loss gain is positive in 92% of bootstrap resamples but its interval includes zero, so forward evidence is directional, not conclusive.
+We fit through 2024 and test 2025 (Fig. 7). For 22 interior linemen with 75+ snaps, adding speed lifts the player-level Spearman correlation from 0.67 to 0.72; the log-loss gain is positive in 92% of bootstrap resamples but its interval includes zero. Forward evidence is directional, not conclusive.
 
 ![Fig. 7: Out-of-time check (fit through 2024, test 2025)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig7_forward.png)
 *Figure 7. Models fit on 2023 and 2024 predict 2025 interior pressure rates. Adding Combine speed to draft slot and size moves the ranking in the right direction.*
@@ -98,7 +98,7 @@ We ran 113 tests: 15 group-level hypotheses, 76 mechanism paths and 22 robustnes
 | Prospect profile | Evidence | Action |
 |---|---|---|
 | Interior, 10 to 30 yd split <= 2.12 s (37 players) | POE +1.7 [+0.3, +3.2] vs -0.5 for the rest; gap +2.3 [+0.5, +4.1] | Draft up; rotational pass rusher from day one |
-| Interior, split 2.12 to 2.20 s | Everyone at or under 2.20 s averages +0.5 [-0.9, +1.5] | Rely on tape and size |
+| Interior, split 2.12 to 2.20 s | All 52 players at or under 2.20 s average +0.5 [-0.9, +1.5] | Rely on tape and size |
 | Interior, split > 2.20 s (23 players) | POE -0.9 [-1.9, +0.1] | Run-down role unless tape shows win-quick |
 | Interior under 297 lb (3-tech types) | Fast-minus-slow POE +2.3 [-4.3, +11.9] (<= 263 lb) and +3.1 [+0.6, +5.3] (264 to 294 lb) | Speed is the best Combine filter here |
 | Interior 297+ lb (nose types) | Fast-minus-slow +0.5 [-2.4, +2.4] | Ignore the split |
@@ -119,7 +119,7 @@ Edge cells use the drill's path efficiency, which does not predict pressure on i
 
 ## 12. Takeaway
 
-At 10 Hz the 40 is a top-speed test. For interior linemen it means about 1.8x the pressure rate between slow and fast prospects of the same size and draft slot, it survives sensor cleaning, selection correction and a context model, and about 20% of it runs through a faster first move. On the edge, speed is real but the path spends it. Use the trace to find interior rushers who are fast for their weight; read edge rushers off the tape.
+At 10 Hz the 40 is a top-speed test. For interior linemen it means about 1.8x the pressure rate between slow and fast prospects of the same size and draft slot, and about 20% of it runs through a faster first move. On the edge, speed is real but the path spends it. Use the trace to find interior rushers who are fast for their weight; read edge rushers off the tape.
 
 ## Appendix: references
 

@@ -82,7 +82,7 @@ if xp.get("model", "gbm") == "league rate":
 else:
     mname = {"gbm": "gradient-boosted model", "logit": "logistic regression"}[xp["model"]]
     g = xp['logloss_gain_pct']; gtxt = f"log loss improves {g:.1f}% over the league rate" if g >= 0.05 else "log loss only matches the league rate"
-    tok["XP_SENTENCE"] = (f"The {mname} wins and is kept. Out of fold, AUC is {xp['auc_player_cv']:.2f} (grouped by game, {xp['auc_game_cv']:.2f}), {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
+    tok["XP_SENTENCE"] = (f"The {mname} wins. Out of fold, AUC is {xp['auc_player_cv']:.2f} (grouped by game, {xp['auc_game_cv']:.2f}), {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
                           "on true dropbacks, pre-snap context predicts which rusher gets home only weakly, so POE stays close to the raw rate.")
 tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]
@@ -122,6 +122,18 @@ tok["POE_G"] = poe(green["poe_fast"], green["fast_lo"], green["fast_hi"]); tok["
 tok["GAP_G"] = poe(green["diff"], green["diff_lo"], green["diff_hi"])
 tok["CUT_R"] = f"{red['cut']:.2f}"; tok["N_R"] = str(red["n_slow"]); tok["POE_R"] = poe(red["poe_slow"], red["slow_lo"], red["slow_hi"])
 tok["POE_MID"] = poe(red["poe_fast"], red["fast_lo"], red["fast_hi"])
+band = [x for x in res["matrix"].get("interior_bands", []) if x["lo"] is not None and x["hi"] is not None and abs(x["lo"] - green["cut"]) < 1e-6 and abs(x["hi"] - red["cut"]) < 1e-6]
+if band:
+    bd = band[0]; tok["N_MID"] = str(bd["n"]); tok["MID_TEXT"] = f"POE {poe(bd['poe'], bd['poe_lo'], bd['poe_hi'])}"
+else:
+    tok["N_MID"] = None; tok["MID_TEXT"] = f"All {red['n_fast']} players at or under {red['cut']:.2f} s average {tok['POE_MID']}"
+lc = res.get("loco")
+if lc:
+    lo_, hi_ = lc["dll_ci"]; sig = lo_ > 0
+    tok["LOCO_SENTENCE"] = (f"Holding out each draft class in turn, so test players never enter training, speed lifts the Spearman correlation from {lc['rho0']:.2f} to {lc['rho1']:.2f} ({lc['n_eval']} players) and "
+                            + ("improves held-out log loss with a 95% interval above zero." if sig else f"improves held-out log loss in {lc['dll_pos_share'] * 100:.0f}% of resamples, interval again including zero: forward evidence is directional, not conclusive."))
+else:
+    tok["LOCO_SENTENCE"] = "Forward evidence is directional, not conclusive."
 wb = res["matrix"]["weight_bands"]; light = [v for k, v in wb.items() if k.startswith("light")][0]; mid = wb["mid"]; heavy = [v for k, v in wb.items() if k.startswith("heavy")][0]
 tok["W1"] = f"{light['w_range'][1]:.0f}"; tok["W1P"] = f"{mid['w_range'][0]:.0f}"; tok["W2"] = f"{mid['w_range'][1]:.0f}"; tok["W2P"] = f"{heavy['w_range'][0]:.0f}"
 tok["GAP_LIGHT"] = f"{light['diff']:+.1f}"; tok["GAP_MID"] = f"{mid['diff']:+.1f}"; tok["GAP_HEAVY"] = poe(heavy["diff"], heavy["lo"], heavy["hi"])
@@ -138,6 +150,7 @@ def sub(m):
     if ":" in body:
         kind, path = body.split(":", 1); return handler(kind, path)
     raise KeyError(body)
+if tok.get("N_MID") is None: tpl = tpl.replace(" ({N_MID} players)", "")
 out = re.sub(r"\{([A-Z][A-Z0-9_]*(?::[^{}]+)?)\}", sub, tpl)
 Path(sys.argv[3]).write_text(out)
 
