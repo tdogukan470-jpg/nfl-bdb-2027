@@ -5,7 +5,7 @@ Scoring: Football 30 / Data Science 30 / Writeup 20 / DataViz 20. PASS/FAIL gate
 
 ## Current state (VERIFIED FACT unless noted)
 - Writeup "Speed Travels: NFL Pass Rush" is submitted, body from repo commit 040e105 (v17 numbers; 1,951 words by our count). Live page checked 2026-11-03 20:10 TR: "Submitted", new subtitle, "The stricter test fails" paragraph present, 7 inline figures load, gallery holds the 7 v17 figures with titles.
-- Notebook version 17 ran to completion; version 18 (adds within-class ORs + class x speed Wald test) pushed 2026-11-03 ~20:08 TR, result pending.
+- Notebook version 21 ran to completion (v18 crashed on my variable-name bug; v19/v20 likely duplicate pushes from the second bridge instance). Results identical to v17 plus res['within_class'].
 - GitHub mirror: github.com/tdogukan470-jpg/nfl-bdb-2027 (public), commit 040e105.
 - Every result number in the writeup is filled from results.json by writeup/fill_writeup.py.
 - Kaggle bridge on the PC: two instances running (pids seen alternately in heartbeat), so jobs can run twice. Patched claim logic loads only after restart.
@@ -18,10 +18,10 @@ Scoring: Football 30 / Data Science 30 / Writeup 20 / DataViz 20. PASS/FAIL gate
 - FDR: 113 tests, 61 with q < 0.05.
 - Weak rows (CI touches 1.0): team fixed effects 1.16 [0.96, 1.40], 2024 season alone 1.16 [0.99, 1.36], sacks 1.27 [0.95, 1.70].
 
-- v17 leave-one-class-out: adding speed does NOT improve held-out-class prediction (log-loss gain -0.48e-3 [-1.26e-3, +0.40e-3]); fit on 2024+2025 classes only, interior OR 1.00 [0.72, 1.39]. The pooled effect leans on the 2023 class. Stated in the writeup.
+- v17 leave-one-class-out: adding speed does NOT improve held-out-class prediction (log-loss gain -0.48e-3 [-1.26e-3, +0.40e-3]); fit on 2024+2025 classes only, interior OR 1.00 [0.72, 1.39]. v21: per-class interior ORs all > 1 (2023 1.27, 2024 1.11, 2025 1.24), interaction p 0.38, only 2023 precise and its player bootstrap 0.98-1.60 touches 1; excluding 2023 with class FE 1.09 [0.75, 1.57]. The earlier "1.00 [0.72, 1.39]" was a fit without class FE (replaced). Stated in the writeup.
 
 ## Known risks
-- Central finding depends on one draft class (MEASURED, see above); E18 quantifies how much.
+- Central finding depends on one draft class (MEASURED, see above); per-class sandwich SEs with ~30 clusters look too small (2023 SE 0.040 vs bootstrap far wider); the pooled sandwich CI may be optimistic too (UNKNOWN: no pooled player bootstrap of the OR yet; permutation p 0.0005 exists).
 - 75 interior players; decision-matrix cells are small (HYPOTHESIS-level guidance, labelled as such in the writeup).
 - Competition rules forbid redistributing data; outputs now hold aggregates only. GitHub repo holds no competition data.
 - Inline figures depend on raw.githubusercontent.com availability (ESTIMATE: low risk; gallery copies are hosted on Kaggle as a fallback).

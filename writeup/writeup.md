@@ -84,7 +84,7 @@ Imai-Keele-Tingley mediation [5] (1,000 quasi-Bayesian draws, cluster-robust), r
 
 ## 9. Out-of-sample checks and multiple testing
 
-We fit through 2024 and test 2025 (Fig. 7). For 22 interior linemen with 75+ snaps, adding speed lifts the player-level Spearman correlation from 0.67 to 0.72; the log-loss gain is positive in 92% of bootstrap resamples but its interval includes zero. The stricter test fails. Holding out each draft class in turn, so test players never enter training, adding speed does not improve held-out prediction (log-loss gain -0.48 x 10^-3, 95% CI -1.26 to +0.40; player Spearman 0.32 without speed, 0.25 with). Fit on the 2024 and 2025 classes alone, the interior OR is 1.00 [0.72, 1.39]: the pooled effect leans on the 2023 class.
+We fit through 2024 and test 2025 (Fig. 7). For 22 interior linemen with 75+ snaps, adding speed lifts the player-level Spearman correlation from 0.67 to 0.72; the log-loss gain is positive in 92% of bootstrap resamples but its interval includes zero. The stricter test fails. Holding out each draft class, adding speed does not improve held-out prediction (log-loss gain -0.48 x 10^-3, 95% CI -1.26 to +0.40; player Spearman 0.32 without speed, 0.25 with). Per class the estimate exceeds 1 (2023 1.27, 2024 1.11, 2025 1.24; interaction p = 0.38), but only 2023 is precise; without 2023, OR 1.09 [0.75, 1.57]. The data cannot separate a common effect from a 2023-only one.
 
 ![Fig. 7: Out-of-time check (fit through 2024, test 2025)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig7_forward.png)
 *Figure 7. Models fit on 2023 and 2024 predict 2025 interior pressure rates. Adding Combine speed to draft slot and size moves the ranking in the right direction.*
@@ -114,13 +114,13 @@ Edge cells use the drill's path efficiency, which does not predict pressure on i
 
 - Observational data: no causal claim beyond the mediation assumptions above.
 - 75 interior and 95 edge players; the decision-matrix cells are small. Treat them as direction, not rules.
-- The interior effect leans on the 2023 draft class and did not transfer to held-out classes; for a new class it is a hypothesis to monitor, not a rule.
+- Only the 2023 class estimates the interior effect precisely (its player bootstrap, 0.98 to 1.60, touches 1); for a new class the effect is a hypothesis to monitor, not a rule.
 - The sensor audit covers the 40-yard window only; no quarterback tracking, time to throw or line-up depth, so double-team and alignment are proxies.
 - Edge and OL nulls mean no detectable linear speed effect, not zero.
 
 ## 12. Takeaway
 
-At 10 Hz the 40 is a top-speed test. In 2023-25 data, interior linemen who are fast for their size and draft slot generate about 1.8x the pressure rate of slow ones, about 20% of it through a faster first move. That signal leans on the 2023 class and has not yet held up out of class, so it should guide where scouts look, not replace the tape. On the edge, speed is real but the path spends it; read edge rushers off the tape.
+At 10 Hz the 40 is a top-speed test. In 2023-25 data, interior linemen who are fast for their size and draft slot generate about 1.8x the pressure rate of slow ones, about 20% of it through a faster first move. That signal is precise only in the 2023 class and has not held up out of class, so it should guide where scouts look, not replace the tape. On the edge, speed is real but the path spends it; read edge rushers off the tape.
 
 ## Appendix: references
 

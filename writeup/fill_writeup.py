@@ -143,9 +143,21 @@ if lc:
         # which held-out class leaves a null fit on the others?
         nulls = [(c_, v_["train_or"]) for c_, v_ in lc["by_class"].items() if v_["train_or"]["lo"] <= 1.0]
         others = lambda c_: " and ".join(sorted(k for k in lc["by_class"] if k != c_))
-        s_ = (f"The stricter test fails. Holding out each draft class in turn, so test players never enter training, adding speed does not improve held-out prediction "
+        s_ = (f"The stricter test fails. Holding out each draft class, adding speed does not improve held-out prediction "
               f"(log-loss gain {lc['dll'] * 1000:+.2f} x 10^-3, 95% CI {lo_ * 1000:+.2f} to {hi_ * 1000:+.2f}; player Spearman {lc['rho0']:.2f} without speed, {lc['rho1']:.2f} with).")
-        if nulls:
+        wc = res.get("within_class")
+        if wc and nulls:
+            c_ = nulls[0][0]; cls_ = sorted(k for k in wc if k.isdigit()); ex_ = wc.get(f"int_excl{c_}_fe")
+            prec = [k for k in cls_ if wc[k]["lo"] > 1.0]
+            s_ += (" Per class the estimate " + ("exceeds 1" if all(wc[k]["OR"] > 1 for k in cls_) else "mixed") + " ("
+                   + ", ".join(f"{k} {wc[k]['OR']:.2f}" for k in cls_) + f"; interaction p = {wc['interaction_wald_p']:.2f}), but only "
+                   + " and ".join(prec) + " is precise" + (f"; without {c_}, OR {ex_['OR']:.2f} [{ex_['lo']:.2f}, {ex_['hi']:.2f}]" if ex_ else "")
+                   + f". The data cannot separate a common effect from a {c_}-only one.")
+            bc_ = wc[c_].get("boot_ci")
+            tok["LIM_CLASS"] = (f"Only the {c_} class estimates the interior effect precisely" + (f" (its player bootstrap, {bc_[0]:.2f} to {bc_[1]:.2f}, touches 1)" if bc_ and bc_[0] <= 1 else "")
+                                + "; for a new class the effect is a hypothesis to monitor, not a rule.")
+            tok["TAKE_CLASS"] = f"That signal is precise only in the {c_} class and has not held up out of class, so it should guide where scouts look, not replace the tape."
+        elif nulls:
             c_, o_ = nulls[0]
             s_ += f" Fit on the {others(c_)} classes alone, the interior OR is {o_['OR']:.2f} [{o_['lo']:.2f}, {o_['hi']:.2f}]: the pooled effect leans on the {c_} class."
             tok["LIM_CLASS"] = f"The interior effect leans on the {c_} draft class and did not transfer to held-out classes; for a new class it is a hypothesis to monitor, not a rule."

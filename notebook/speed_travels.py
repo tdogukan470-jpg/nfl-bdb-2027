@@ -758,6 +758,31 @@ try:
         if n_ > 8: br.append(c_ - a_)
     loco.update(dll_ci=[float(np.percentile(bd, 2.5)), float(np.percentile(bd, 97.5))], dll_pos_share=float(np.mean(np.array(bd) > 0)), drho_ci=[float(np.percentile(br, 2.5)), float(np.percentile(br, 97.5))], drho_pos_share=float(np.mean(np.array(br) > 0)))
     res["loco"] = loco; print(json.dumps(loco, indent=1, default=float))
+    # Within-class estimates: the same model fit separately on each draft class (no class fixed effects needed).
+    # Sandwich SEs with ~30 clusters can be too small, so each class also gets a player-cluster bootstrap of the OR.
+    wc_ = {}; rng_w = np.random.default_rng(23)
+    def _wboot(D, B):
+        ids = D.nfl_id.unique(); gi = {i: np.where(D.nfl_id.values == i)[0] for i in ids}; out = []
+        for _ in range(B):
+            ix = np.concatenate([gi[i] for i in rng_w.choice(ids, len(ids))]); Db = D.iloc[ix]
+            try: out.append(float(smf.logit(f"pres ~ vs + {b_noclass}", data=Db).fit(disp=0).params["vs"]))
+            except Exception: pass
+        return [float(np.exp(np.percentile(out, 2.5))), float(np.exp(np.percentile(out, 97.5)))], len(out)
+    for nm_, D_ in (("", IL), ("edge_", ED)):
+        for cls in sorted(D_.dy.unique()):
+            dw_ = D_[D_.dy == cls]
+            if dw_.nfl_id.nunique() < 10: continue
+            r_ = dict(orci(G(f"pres ~ vs + {b_noclass}", dw_)), players=int(dw_.nfl_id.nunique()), snaps=int(len(dw_)), speed_sd=float(dw_.groupby("nfl_id").vpk.first().std()))
+            r_["boot_ci"], r_["boot_n"] = _wboot(dw_, 100 if FAST else 500)
+            wc_[f"{nm_}{int(cls)}"] = r_
+    # pooled fit without the 2023 class, keeping class fixed effects (the LOCO train_or fits omit them)
+    wc_["int_excl2023_fe"] = orci(G(f"pres ~ vs + {b}", IL[IL.dy != 2023])); wc_["int_excl2023_fe"]["players"] = int(IL[IL.dy != 2023].nfl_id.nunique())
+    # class x speed interaction: does the slope differ by class?
+    gi_ = G(f"pres ~ vs * C(dy) + {b_noclass}", IL); ip_ = [k for k in gi_.params.index if k.startswith("vs:")]
+    from scipy.stats import chi2 as _chi2
+    bb_ = gi_.params[ip_].values; VV_ = gi_.cov_params().loc[ip_, ip_].values; W_ = float(bb_ @ np.linalg.solve(VV_, bb_))
+    wc_["interaction_wald_p"] = float(_chi2.sf(W_, len(ip_))); wc_["interaction_df"] = len(ip_)
+    res["within_class"] = wc_; print(json.dumps(wc_, indent=1, default=float))
 except Exception as e: fail("5.8_loco", e)
 
 # %%
