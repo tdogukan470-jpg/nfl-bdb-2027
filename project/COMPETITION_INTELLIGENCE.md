@@ -1,6 +1,6 @@
 # COMPETITION_INTELLIGENCE (2026-11-01)
 
-Sources inspected: competition Overview/Evaluation/Data/Rules pages; host (Tom Bliss) forum answers (threads 746425, 746678, 750418); 12 public notebooks pulled with the Kaggle CLI and read (markdown + code).
+Sources inspected: competition Overview/Evaluation/Data/Rules pages; host (Tom Bliss) forum answers (threads 746425, 746678, 750418); 12 public notebooks pulled with the Kaggle CLI; markdown read for 7 (dariushafshar x2, agileteam, mathurinache, yumekohata, olsols4, nathanjacob) and agileteam's code grepped. NOT read: haydonnazar, jeovaanderson, chadlite77, avikdas567, jaikwang.
 
 ## Host clarifications (VERIFIED FACT, forum)
 - Preseason/postseason outcomes may be used; theme text says regular season. We use REG only and report the all-games fit as a robustness row.

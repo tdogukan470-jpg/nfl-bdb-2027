@@ -4,10 +4,10 @@ Competition: Kaggle NFL Big Data Bowl 2027, Open track. Deadline 2027-01-06 23:5
 Scoring: Football 30 / Data Science 30 / Writeup 20 / DataViz 20. PASS/FAIL gates: explicit Combine-to-NFL linkage; readable markdown + embedded visuals + attached public notebook. Limits: <= 2,000 words, < 10 figures/tables (host: captions, figure labels and in-writeup appendix do not count).
 
 ## Current state (VERIFIED FACT unless noted)
-- Writeup "Speed Travels: NFL Pass Rush" is submitted (status "Submitted!") with body v16: 7 figures embedded inline (GitHub raw URLs, rendered by Kaggle's image proxy at 3200 px) + 7 gallery images (v16) + 2 tables = 9 visuals. Body ~1,999 words by a strict count that includes headings and table cells.
+- Writeup "Speed Travels: NFL Pass Rush" is submitted (status "Submitted!") with body v16: 7 figures embedded inline (GitHub raw URLs, rendered by Kaggle's image proxy at 3200 px) + 7 gallery images (v16) + 2 tables = 9 visuals. Body 1,956 words by our count (headings and table cells included; figure/table captions and the reference appendix excluded per host ruling).
 - Notebook doukanturan/nfl-bdb27-speed-travels version 16 ran to completion (CPU, ~19 min, no errors in results.json["_errors"]). Outputs: results.json, table1.csv, 7 figures. No per-play competition data in outputs (caches moved to /kaggle/temp).
 - GitHub mirror: github.com/tdogukan470-jpg/nfl-bdb-2027 (public), commit "v16".
-- Every number in the writeup is filled from results.json by writeup/fill_writeup.py; the template is writeup/writeup_template.md.
+- Every result number in the writeup is filled from results.json by writeup/fill_writeup.py; method constants (3.5 g threshold, 1,000 mediation draws, 500-rush illustration) are written in writeup/writeup_template.md.
 
 ## Best verified result (MEASURED, notebook v16, regular-season dropbacks, class fixed effects)
 - Interior DL: OR 1.22 [1.12, 1.34] per +0.5 yd/s Combine top speed (75 players, 9,378 rushes). p10->p90 pressure rate 6.3% -> 11.4% (ratio 1.8, CI 1.1 to 2.8).

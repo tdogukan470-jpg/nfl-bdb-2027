@@ -2,6 +2,7 @@
 Usage: python3 fill_writeup.py results.json template.md out.md
 """
 import json, re, sys, math
+import numpy as np
 from pathlib import Path
 
 res = json.load(open(sys.argv[1]))
@@ -64,16 +65,18 @@ a, b, c = res["forty_poly"]; vmed = res["speed_p10_p50_p90"][1]
 tok["STOPWATCH"] = f"{abs(2 * a * vmed + b) * 0.5:.1f}"
 ppu = res["poe"]["interior"]["poe_pp_per_unit"]["b"]
 tok["PRESS100"] = f"{ppu:.1f}"
+_rb = {k: v for k, v in res["robust"].items() if k != "Baseline (all controls)"}
+tok["N_RB"] = str(len(_rb)); tok["RB_MIN"] = f"{min(v['OR'] for v in _rb.values()):.2f}"; tok["RB_MAX"] = f"{max(v['OR'] for v in _rb.values()):.2f}"
 tok["PRESS_SEASON"] = str(int(round(ppu * 5)))
 # robustness rows whose interval includes 1.0
 weak_rows = [k for k, v in res["robust"].items() if v["lo"] <= 1.0]
 if weak_rows:
     names = {"+ defensive team fixed effects": "team fixed effects", "Season 2024 only": "the 2024 season alone", "Sack": "sacks", "Quick pressure only (<= 2.5 s)": "quick pressure", "Season 2023 only": "the 2023 season alone", "Season 2025 only": "the 2025 season alone"}
     lst = [names.get(k, k.lower()) for k in weak_rows]
-    lo_est = min(v["OR"] for v in res["robust"].values())
-    tok["WEAK_ROWS"] = f"Point estimates stay above {math.floor(lo_est * 100) / 100:.2f}; only " + (", ".join(lst[:-1]) + " and " + lst[-1] if len(lst) > 1 else lst[0]) + (", the thinnest checks, have intervals touching 1.0." if len(lst) <= 4 else " have intervals touching 1.0.")
+    tok["WEAK_ROWS_LC"] = "only " + (", ".join(lst[:-1]) + " and " + lst[-1] if len(lst) > 1 else lst[0]) + " have intervals touching 1.0."
+    tok["WEAK_ROWS"] = "Only " + (", ".join(lst[:-1]) + " and " + lst[-1] if len(lst) > 1 else lst[0]) + " have intervals touching 1.0."
 else:
-    tok["WEAK_ROWS"] = "Every interval excludes 1.0."
+    tok["WEAK_ROWS"] = "Every interval excludes 1.0."; tok["WEAK_ROWS_LC"] = "every interval excludes 1.0."
 xp = res["xp"]
 if xp.get("model", "gbm") == "league rate":
     cl = xp["candidate_logloss"]
@@ -82,7 +85,7 @@ if xp.get("model", "gbm") == "league rate":
 else:
     mname = {"gbm": "gradient-boosted model", "logit": "logistic regression"}[xp["model"]]
     g = xp['logloss_gain_pct']; gtxt = f"log loss improves {g:.1f}% over the league rate" if g >= 0.05 else "log loss only matches the league rate"
-    tok["XP_SENTENCE"] = (f"The {mname} wins. Out of fold, AUC is {xp['auc_player_cv']:.2f} (grouped by game, {xp['auc_game_cv']:.2f}), {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
+    tok["XP_SENTENCE"] = (f"The {mname} wins. Out of fold, AUC is {xp['auc_player_cv']:.2f}, {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
                           "on true dropbacks, pre-snap context predicts which rusher gets home only weakly, so POE stays close to the raw rate.")
 tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]
@@ -103,7 +106,9 @@ def qfloor(q):  # a round number below q, for "none has q below X"
         if q >= x: return f"{x:g}"
     return f"{q:.2f}"
 s = f"Every interior headline test (Table 1, top speed, stopwatch 40, POE) has q at or below {qceil(qmax_int)}"
-if bb is not None: s += f" except the Beta-Binomial test (q {qfmt(bb['q_all'])})"
+if bb is not None:
+    s += f" except the Beta-Binomial likelihood-ratio test (q {qfmt(bb['q_all'])}"
+    s += "; its player bootstrap interval includes 1)" if res["eb"]["interior"]["OR_lo"] <= 1 else ")"
 s += f"; no edge, OL or WR headline test has q below {qfloor(qmin_null)}."
 weak = [(k.replace('Robustness: ', ''), v['q_all']) for k, v in tab.items() if v['family'] == 'R' and v['q_all'] > 0.05]
 if weak:
@@ -138,6 +143,12 @@ wb = res["matrix"]["weight_bands"]; light = [v for k, v in wb.items() if k.start
 tok["W1"] = f"{light['w_range'][1]:.0f}"; tok["W1P"] = f"{mid['w_range'][0]:.0f}"; tok["W2"] = f"{mid['w_range'][1]:.0f}"; tok["W2P"] = f"{heavy['w_range'][0]:.0f}"
 tok["GAP_LIGHT"] = f"{light['diff']:+.1f}"; tok["GAP_MID"] = f"{mid['diff']:+.1f}"; tok["GAP_HEAVY"] = poe(heavy["diff"], heavy["lo"], heavy["hi"])
 tok["GAP_LIGHT_CI"] = poe(light["diff"], light["lo"], light["hi"]); tok["GAP_MID_CI"] = poe(mid["diff"], mid["lo"], mid["hi"])
+_sig = [(nm_, b_) for nm_, b_ in (("light", light), ("mid", mid)) if b_["lo"] > 0]
+if len(_sig) == 1:
+    b_ = _sig[0][1]; tok["LIGHT_ACTION"] = f"Weigh the split here; the {b_['w_range'][0]:.0f} to {b_['w_range'][1]:.0f} lb gap excludes 0"
+elif len(_sig) == 2: tok["LIGHT_ACTION"] = "Weigh the split here; both gaps exclude 0"
+else: tok["LIGHT_ACTION"] = "Gap is positive but intervals include 0"
+tok["MEDG"] = f"{np.median([y['median_peak_g'] for y in res['audit']['by_year']]):.1f}"
 ec = res["matrix"]["edge_cells"]; ew = res["matrix"]["edge_wide"]
 tok["N_FE"] = str(ec["fast_efficient"]["n"]); tok["POE_FE"] = poe(ec["fast_efficient"]["poe"], ec["fast_efficient"]["lo"], ec["fast_efficient"]["hi"])
 tok["N_FI"] = str(ec["fast_inefficient"]["n"]); tok["POE_FI"] = poe(ec["fast_inefficient"]["poe"], ec["fast_inefficient"]["lo"], ec["fast_inefficient"]["hi"])
@@ -167,4 +178,5 @@ for ln in body.split("\n"):
     lines.append(ln)
 words = [w for w in re.sub(r"[#*|`]", " ", "\n".join(lines)).split() if re.search(r"[A-Za-z0-9]", w)]
 tables = re.findall(r"^\*\*Table \d", out, flags=re.M); figs = re.findall(r"^!\[", out, flags=re.M)
+if len(words) > 1960: print("WARNING: body word count above 1,960; trim before publishing")
 print(f"body words (excl. captions/appendix): {len(words)} | figures: {len(figs)} | tables: {len(tables)} | total visuals: {len(figs) + len(tables)}")

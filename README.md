@@ -7,7 +7,7 @@ Entry for the Kaggle **NFL Big Data Bowl 2027** (Open track) by Doğukan Turan.
 
 ## Summary
 
-At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch time: r = -0.98). For **interior defensive linemen** (75 players, 9,378 regular-season dropback rushes) each +0.5 yd/s of Combine top speed raises the odds of generating pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34), with weight, arm length, draft slot, draft class, down and distance held fixed. From the 10th to the 90th percentile of speed the adjusted pressure rate moves from 6.3% to 11.4%. The effect survives sensor cleaning (Savitzky-Golay and a 2.5 g limiter), inverse-probability weighting and a Heckman-type control function for selection into the NFL, a cross-validated expected-pressure context model (POE OR 1.22) and Beta-Binomial shrinkage. Imai-Keele-Tingley mediation puts 20% (9% to 43%) of the effect through a faster get-off. **Edge rushers, offensive linemen and WR/TE show no detectable speed effect**; on the edge, speed reaches the field but is spent on less direct paths. Drill "first-step" numbers have test-retest reliability of 0.36 to 0.54 and do not travel to games.
+At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch time: r = -0.98). For **interior defensive linemen** (75 players, 9,378 regular-season dropback rushes) each +0.5 yd/s of Combine top speed raises the odds of generating pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34), with weight, arm length, draft slot, draft class, down and distance held fixed. From the 10th to the 90th percentile of speed the adjusted pressure rate moves from 6.3% to 11.4%. The effect survives sensor cleaning (Savitzky-Golay and a 2.5 g limiter), inverse-probability weighting and a Heckman-type control function for selection into the NFL, and a cross-validated expected-pressure context model (POE OR 1.22); a Beta-Binomial shrinkage check is supportive (likelihood-ratio p = 0.003) but its player bootstrap interval (0.93 to 1.34) includes 1. Of 21 robustness checks, only team fixed effects, sacks and the 2024 season alone have intervals touching 1.0. Imai-Keele-Tingley mediation puts 20% (9% to 43%) of the effect through a faster get-off. **Edge rushers, offensive linemen and WR/TE show no detectable speed effect**; on the edge, speed reaches the field but is spent on less direct paths. Drill "first-step" numbers have test-retest reliability of 0.36 to 0.54 and do not travel to games.
 
 ## Headline table
 
@@ -26,7 +26,7 @@ At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch 
 - Regular-season games only (`games.season_type == "REG"`); the files also hold preseason and playoff games (21% of player-play rows).
 - Dropbacks only: rushes are kept when the play has a recorded `pass_result` (the host's definition of a dropback). `player_get_off` is also populated on run plays, where pressure cannot occur.
 - Ball frames (`entity_type == "BALL"`) removed from the Combine file; the Combine `dis` column is not used.
-- Draft-class fixed effects in every model: the 2025 Combine export is stored at full precision while 2023-24 positions sit on a 1/60-yd grid.
+- Draft-class fixed effects in every model: public notebooks report that the 2025 Combine export is stored at full precision while 2023-24 positions sit on a 1/60-yd grid (not verified by us).
 - Per-play intermediate tables are cached outside the published notebook output; only aggregates, figures and `results.json` are saved.
 
 ## Figures
@@ -55,9 +55,9 @@ At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch 
 
 ```
 notebook/   speed-travels.ipynb (the Kaggle notebook), speed_travels.py (same code as a script), kernel-metadata.json
-writeup/    writeup.md (the submitted text), writeup_template.md and fill_writeup.py (every number is filled from results.json)
+writeup/    writeup.md (the submitted text), writeup_template.md and fill_writeup.py (every result number is filled from results.json; method constants such as the 3.5 g threshold are written in the template)
 figures/    fig1 to fig7, 16:9 at 3200x1800
-results/    results.json (every number quoted in the writeup), table1.csv
+results/    results.json (every result number quoted in the writeup), table1.csv
 ```
 
 ## Reproducing
