@@ -91,7 +91,7 @@ tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]
 def short(n):
     parts = n.split(); return n if len(parts) == 1 else (parts[0] + " " + parts[-1] if parts[0] in ("Byron",) else parts[-1])
-tok["EBTOP"] = ", ".join(f"{t['display_name']} ({t['poe_shrunk'] * 100:+.1f})" for t in top[:-1]) + f" and {top[-1]['display_name']} ({top[-1]['poe_shrunk'] * 100:+.1f}) points"
+top = top[:3]; tok["EBTOP"] = ", ".join(f"{t['display_name']} ({t['poe_shrunk'] * 100:+.1f})" for t in top[:-1]) + f" and {top[-1]['display_name']} ({top[-1]['poe_shrunk'] * 100:+.1f}) points"
 
 # FDR headline sentence
 tab = {t["test"]: t for t in res["fdr"]["table"]}
@@ -113,7 +113,7 @@ s += f"; no edge, OL or WR headline test has q below {qfloor(qmin_null)}."
 weak = [(k.replace('Robustness: ', ''), v['q_all']) for k, v in tab.items() if v['family'] == 'R' and v['q_all'] > 0.05]
 if weak:
     names = {"Sack": "sacks", "Quick pressure only (<= 2.5 s)": "quick pressure", "+ defensive team fixed effects": "team fixed effects", "Season 2024 only": "the 2024 season alone", "Season 2023 only": "the 2023 season alone", "Season 2025 only": "the 2025 season alone"}
-    if set(k for k, _ in weak) == set(weak_rows): s += " The robustness rows named above are the ones with q above 0.05."
+    if set(k for k, _ in weak) == set(weak_rows): pass
     else: s += " Robustness rows with q above 0.05: " + ", ".join(f"{names.get(k, k.lower())} ({qfmt(q).replace('= ', '')})" for k, q in weak) + "."
 tok["FDR_HEADLINE"] = s
 
@@ -132,11 +132,25 @@ if band:
     bd = band[0]; tok["N_MID"] = str(bd["n"]); tok["MID_TEXT"] = f"POE {poe(bd['poe'], bd['poe_lo'], bd['poe_hi'])}"
 else:
     tok["N_MID"] = None; tok["MID_TEXT"] = f"All {red['n_fast']} players at or under {red['cut']:.2f} s average {tok['POE_MID']}"
+tok["LIM_CLASS"] = "Draft classes differ; see Section 9."
+tok["TAKE_CLASS"] = ""
 lc = res.get("loco")
 if lc:
-    lo_, hi_ = lc["dll_ci"]; sig = lo_ > 0
-    tok["LOCO_SENTENCE"] = (f"Holding out each draft class in turn, so test players never enter training, speed lifts the Spearman correlation from {lc['rho0']:.2f} to {lc['rho1']:.2f} ({lc['n_eval']} players) and "
-                            + ("improves held-out log loss with a 95% interval above zero." if sig else f"improves held-out log loss in {lc['dll_pos_share'] * 100:.0f}% of resamples, interval again including zero: forward evidence is directional, not conclusive."))
+    lo_, hi_ = lc["dll_ci"]
+    if lo_ > 0:
+        tok["LOCO_SENTENCE"] = (f"Holding out each draft class in turn, so test players never enter training, speed improves held-out log loss (95% interval above zero) and moves the player Spearman correlation from {lc['rho0']:.2f} to {lc['rho1']:.2f}.")
+    else:
+        # which held-out class leaves a null fit on the others?
+        nulls = [(c_, v_["train_or"]) for c_, v_ in lc["by_class"].items() if v_["train_or"]["lo"] <= 1.0]
+        others = lambda c_: " and ".join(sorted(k for k in lc["by_class"] if k != c_))
+        s_ = (f"The stricter test fails. Holding out each draft class in turn, so test players never enter training, adding speed does not improve held-out prediction "
+              f"(log-loss gain {lc['dll'] * 1000:+.2f} x 10^-3, 95% CI {lo_ * 1000:+.2f} to {hi_ * 1000:+.2f}; player Spearman {lc['rho0']:.2f} without speed, {lc['rho1']:.2f} with).")
+        if nulls:
+            c_, o_ = nulls[0]
+            s_ += f" Fit on the {others(c_)} classes alone, the interior OR is {o_['OR']:.2f} [{o_['lo']:.2f}, {o_['hi']:.2f}]: the pooled effect leans on the {c_} class."
+            tok["LIM_CLASS"] = f"The interior effect leans on the {c_} draft class and did not transfer to held-out classes; for a new class it is a hypothesis to monitor, not a rule."
+            tok["TAKE_CLASS"] = f"That signal leans on the {c_} class and has not yet held up out of class, so it should guide where scouts look, not replace the tape."
+        tok["LOCO_SENTENCE"] = s_
 else:
     tok["LOCO_SENTENCE"] = "Forward evidence is directional, not conclusive."
 wb = res["matrix"]["weight_bands"]; light = [v for k, v in wb.items() if k.startswith("light")][0]; mid = wb["mid"]; heavy = [v for k, v in wb.items() if k.startswith("heavy")][0]

@@ -15,7 +15,7 @@ From each 10 Hz 40-yard trace we rebuilt start of motion, peak speed over 30 yd,
 ![Fig. 1: Rebuilt 40-yard dash from 10 Hz tracking]({IMG}fig1_forty.png)
 *Figure 1. Left: mean speed curve of each player's fastest tracked 40 by position group (band = 1 SD). Right: tracking top speed against the stopwatch 40 time, one dot per prospect.*
 
-**Reliability (Fig. 2).** Across repeat attempts, peak speed ({REL:40 yd: peak speed}) and the 10 to 30 yd split ({REL:40 yd: 10-30 yd split time}) are nearly perfectly repeatable; the acceleration constant is {REL:40 yd: acceleration time constant}. In the pass-rush drill, speed at 1.0 s is {REL:Pass-rush drill: speed at 1.0 s}, at 0.5 s {REL:Pass-rush drill: speed at 0.5 s}, first-step acceleration {REL:Pass-rush drill: first-step acceleration}. A trait that is mostly noise cannot predict anything.
+**Reliability (Fig. 2).** Across repeat attempts, peak speed ({REL:40 yd: peak speed}) and the 10 to 30 yd split ({REL:40 yd: 10-30 yd split time}) are nearly perfectly repeatable; the acceleration constant is {REL:40 yd: acceleration time constant}. In the pass-rush drill, speed at 1.0 s is {REL:Pass-rush drill: speed at 1.0 s}, at 0.5 s {REL:Pass-rush drill: speed at 0.5 s}, first-step acceleration {REL:Pass-rush drill: first-step acceleration}.
 
 ![Fig. 2: Reliability of Combine metrics (40 vs drill)]({IMG}fig2_reliability.png)
 *Figure 2. Test-retest reliability from repeat attempts ({N:reliability_n.forty} players with two 40s, {N:reliability_n.prd} with two drill reps). Top speed repeats; first-step metrics do not.*
@@ -26,7 +26,7 @@ From each 10 Hz 40-yard trace we rebuilt start of motion, peak speed over 30 yd,
 
 ## 3. Drill numbers do not travel (Fig. 3)
 
-For {N:translate.n_game} linemen with both drill traces and game tracking, the 40's top speed correlates r = {F2:translate.r_vpk_s10.0} with game speed one second after the snap, but within interior linemen only r = {F2:translate.within_interior.r_vpk_s10.0} and within edge r = {F2:translate.within_edge.r_vpk_s10.0}. The drill's first-step speed correlates r = {F2:translate.r_drill_s10.0} (CI {F2:translate.r_drill_s10.1} to {F2:translate.r_drill_s10.2}). Trust the 40's speed trace; single-attempt drill first-step numbers are too noisy to use alone.
+For {N:translate.n_game} linemen with both drill traces and game tracking, the 40's top speed correlates r = {F2:translate.r_vpk_s10.0} with game speed one second after the snap; within interior linemen r = {F2:translate.within_interior.r_vpk_s10.0} and within edge r = {F2:translate.within_edge.r_vpk_s10.0}. The drill's first-step speed correlates r = {F2:translate.r_drill_s10.0} (CI {F2:translate.r_drill_s10.1} to {F2:translate.r_drill_s10.2}). Trust the 40's speed trace; single-attempt drill first-step numbers are too noisy to use alone.
 
 ![Fig. 3: Does Combine speed translate to in-game speed?]({IMG}fig3_translation.png)
 *Figure 3. Combine measures against in-game speed one second after the snap: the 40's top speed (left) carries over, the pass-rush drill's first step (right) does not.*
@@ -37,7 +37,7 @@ From 2023 to 2025 regular-season tracking we computed pressure per pass rush (in
 
 ## 5. Result: interior defensive linemen
 
-For {N:n.int_players} interior DL and {N:n.int_snaps} rushes, each +0.5 yd/s raises the odds of pressure by {ORPCT:table1.int_pressure}% (OR {OR:table1.int_pressure}, 95% CI {LO:table1.int_pressure} to {HI:table1.int_pressure}). From the 10th to the 90th percentile of speed ({F1:p10_p90.v10} to {F1:p10_p90.v90} yd/s) the adjusted pressure rate moves from {PCT1:p10_p90.rate10}% to {PCT1:p10_p90.rate90}%, a ratio of {F1:p10_p90.ratio} (CI {F1:p10_p90.ratio_lo} to {F1:p10_p90.ratio_hi}; Fig. 4). In scouting terms: between two interior prospects of the same weight, arm length and draft range, {STOPWATCH} s on the 40 is worth about {PRESS100} pressures per 100 rushes, roughly {PRESS_SEASON} over a 500-rush season.
+For {N:n.int_players} interior DL and {N:n.int_snaps} rushes, each +0.5 yd/s raises the odds of pressure by {ORPCT:table1.int_pressure}% (OR {OR:table1.int_pressure}, 95% CI {LO:table1.int_pressure} to {HI:table1.int_pressure}). From the 10th to the 90th percentile of speed ({F1:p10_p90.v10} to {F1:p10_p90.v90} yd/s) the adjusted pressure rate moves from {PCT1:p10_p90.rate10}% to {PCT1:p10_p90.rate90}%, a ratio of {F1:p10_p90.ratio} (CI {F1:p10_p90.ratio_lo} to {F1:p10_p90.ratio_hi}; Fig. 4). In scouting terms: between two interior prospects of the same weight, arm length and draft range, {STOPWATCH} s on the 40 is worth about {PRESS100} pressures per 100 rushes.
 
 **Table 1. Effect of +0.5 yd/s Combine top speed**
 
@@ -52,20 +52,20 @@ For {N:n.int_players} interior DL and {N:n.int_snaps} rushes, each +0.5 yd/s rai
 ![Fig. 4: Pressure rate vs Combine top speed (interior DL vs edge)]({IMG}fig4_dose.png)
 *Figure 4. Adjusted pressure rate against Combine top speed with cluster-bootstrap bands. Interior linemen rise across the speed range; the edge slope is not distinguishable from zero.*
 
-**Stress tests (Fig. 5).** Across {N_RB} alternative specifications the odds ratio runs from {RB_MIN} to {RB_MAX}. {WEAK_ROWS} Dropping any single player gives {F2:loo_OR_range.0} to {F2:loo_OR_range.1}; a permutation test gives p {PERM}.
+**Stress tests (Fig. 5).** Across {N_RB} alternative specifications the odds ratio runs from {RB_MIN} to {RB_MAX}. {WEAK_ROWS} Dropping any single player gives {F2:loo_OR_range.0} to {F2:loo_OR_range.1}; a permutation test gives p {PERM}. Single seasons are not independent checks, since the same draft classes recur across seasons (Section 9).
 
 ![Fig. 5: Robustness checks (sensor, selection, xP, seasons)]({IMG}fig5_robust.png)
 *Figure 5. The interior effect under every specification: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model. 1.0 is no effect.*
 
-**Top speed, not burst.** Splitting the signal, top speed carries the effect (OR {OR:decomp.top}) and burst carries none (OR {OR:decomp.burst}, p = {P2:decomp.burst.p}); the stopwatch 10-yard split adds nothing once the 40 is in (p = {P2:decomp_stopwatch.ten.p}). Interior rushers who reach and hold high speed win more often than those who merely start quickly, against the usual emphasis on the first 10 yards.
+**Top speed, not burst.** Splitting the signal, top speed carries the effect (OR {OR:decomp.top}) and burst carries none (OR {OR:decomp.burst}, p = {P2:decomp.burst.p}); the stopwatch 10-yard split adds nothing once the 40 is in (p = {P2:decomp_stopwatch.ten.p}). Reaching and holding speed matters more than the first 10 yards.
 
 ## 6. Selection bias: we only see players who reached the field
 
-Of {N:selection.universe} prospects, {PCT0:selection.share_any_snap}% appear in game tracking but only {N:selection.S_rush.n_selected} ({PCT0:selection.share_rush}%) rush the passer and {N:selection.S_100.n_selected} ({PCT0:selection.share_100}%) rush 100+ times. We modeled each prospect's probability of being observed from measurables, draft slot, position and class (cross-fitted, AUC {F2:selection.S_rush.auc} and {F2:selection.S_100.auc}) and weighted by its inverse; a Heckman-type control function [7] adds the probit inverse Mills ratio, with draft class as the excluded variable. IPW OR {OR:robust.IPW selection weights (any rush snap)} (CI {LO:robust.IPW selection weights (any rush snap)} to {HI:robust.IPW selection weights (any rush snap)}) and {OR:robust.IPW selection weights (100+ rush snaps)} ({LO:robust.IPW selection weights (100+ rush snaps)} to {HI:robust.IPW selection weights (100+ rush snaps)}); control function OR {OR:robust.Heckman-type control function (any rush snap)} and {OR:robust.Heckman-type control function (100+ rush snaps)}, with Mills ratio coefficients far from significant (p = {P2:selection.S_rush.imr_coef_p} and {P2:selection.S_100.imr_coef_p}). Correcting for selection moves the estimate little.
+Of {N:selection.universe} prospects, {PCT0:selection.share_any_snap}% appear in game tracking but only {N:selection.S_rush.n_selected} ({PCT0:selection.share_rush}%) rush the passer and {N:selection.S_100.n_selected} ({PCT0:selection.share_100}%) rush 100+ times. We modeled each prospect's chance of being observed from measurables, draft slot, position and class (cross-fitted, AUC {F2:selection.S_rush.auc} and {F2:selection.S_100.auc}) and weighted by its inverse; a Heckman-type control function [7] adds the probit inverse Mills ratio, with draft class as the excluded variable. IPW OR {OR:robust.IPW selection weights (any rush snap)} (CI {LO:robust.IPW selection weights (any rush snap)} to {HI:robust.IPW selection weights (any rush snap)}) and {OR:robust.IPW selection weights (100+ rush snaps)} ({LO:robust.IPW selection weights (100+ rush snaps)} to {HI:robust.IPW selection weights (100+ rush snaps)}); control function OR {OR:robust.Heckman-type control function (any rush snap)} and {OR:robust.Heckman-type control function (100+ rush snaps)} (Mills ratio p = {P2:selection.S_rush.imr_coef_p} and {P2:selection.S_100.imr_coef_p}).
 
 ## 7. Context model: Pressure Over Expected
 
-We built an expected-pressure (xP) model on {N:xp.n} dropback rushes from down, distance, quarter, clock, score, win probability, expected points, field position, formation, alignment and the distance to the nearest tracked opposing lineman (a double-team proxy, known on {PCT0:xp.opp_ol_known_share}% of snaps). A regularized LightGBM [10] and a ridge logistic regression compete out of fold, with folds grouped by rusher so no player trains the model that scores him. {XP_SENTENCE}
+We built an expected-pressure (xP) model on {N:xp.n} dropback rushes from down, distance, clock, score, win probability, field position, formation and the distance to the nearest tracked opposing lineman (a double-team proxy, known on {PCT0:xp.opp_ol_known_share}% of snaps). A regularized LightGBM [10] and a ridge logistic regression compete out of fold, with folds grouped by rusher so no player trains the model that scores him. {XP_SENTENCE}
 
 Pressure Over Expected (POE) is pressure minus xP. With xP as an offset, interior speed gives OR {OR:poe.interior.or_offset} ({LO:poe.interior.or_offset} to {HI:poe.interior.or_offset}): +0.5 yd/s adds {F1:poe.interior.poe_pp_per_unit.b} points of POE per 100 rushes ({F1:poe.interior.poe_pp_per_unit.lo} to {F1:poe.interior.poe_pp_per_unit.hi}). Edge: OR {OR:poe.edge.or_offset} ({LO:poe.edge.or_offset} to {HI:poe.edge.or_offset}).
 
@@ -76,13 +76,13 @@ Pressure Over Expected (POE) is pressure minus xP. With xP as an offset, interio
 
 ## 8. How speed becomes pressure: formal mediation
 
-Imai-Keele-Tingley causal mediation [5], 1,000 quasi-Bayesian draws with cluster-robust covariances, on the risk-difference scale per +0.5 yd/s.
+Imai-Keele-Tingley mediation [5] (1,000 quasi-Bayesian draws, cluster-robust), risk-difference scale per +0.5 yd/s.
 
 **Interior.** Speed shortens get-off time, and get-off drives pressure: the average causal mediation effect (ACME) is {PP:mediation.interior.player_get_off.acme} points per 100 rushes (p = {P3:mediation.interior.player_get_off.acme.p}) against a total effect of {PP:mediation.interior.player_get_off.tot}, so **{PCT0:mediation.interior.player_get_off.prop.est}% ({PCT0:mediation.interior.player_get_off.prop.lo}% to {PCT0:mediation.interior.player_get_off.prop.hi}%) runs through get-off**. Speed at 1 s, path directness, depth and width show no detectable indirect effect.
 
 **Edge: suppression.** Faster edge rushers do run faster in-game (ACME through speed at 1 s {PP:mediation.edge.s_10.acme}), but they take less direct paths: path efficiency carries an ACME of {PP:mediation.edge.path_eff_20.acme} against a direct effect of {PP:mediation.edge.path_eff_20.ade}, total {PP:mediation.edge.path_eff_20.tot}. Speed helps, the route spends it, and the edge total looks null. Mediator and outcome come from the same snap, so these hold only if no unmeasured factor drives both.
 
-## 9. Out-of-time check and multiple testing
+## 9. Out-of-sample checks and multiple testing
 
 We fit through 2024 and test 2025 (Fig. 7). For {N:forward.eval_players} interior linemen with 75+ snaps, adding speed lifts the player-level Spearman correlation from {F2:forward.rho_draft+size} to {F2:forward.rho_draft+size+speed}; the log-loss gain is positive in {PCT0:forward.dll_pos_share}% of bootstrap resamples but its interval includes zero. {LOCO_SENTENCE}
 
@@ -97,7 +97,7 @@ We ran {N:fdr.n_tests} tests: {N:fdr.by_family.H} group-level hypotheses, {N:fdr
 
 | Prospect profile | Evidence | Action |
 |---|---|---|
-| Interior, 10 to 30 yd split <= {CUT_G} s ({N_G} players) | POE {POE_G} vs {POE_REST} for the rest; gap {GAP_G} | Move up the board as a pass-rush candidate |
+| Interior, 10 to 30 yd split <= {CUT_G} s ({N_G} players) | POE {POE_G} vs {POE_REST} for the rest; gap {GAP_G} | Flag for a closer pass-rush look |
 | Interior, split {CUT_G} to {CUT_R} s ({N_MID} players) | {MID_TEXT} | Rely on tape and size |
 | Interior, split > {CUT_R} s ({N_R} players) | POE {POE_R} | Lower pass-rush priority; let tape decide |
 | Interior under {W2P} lb (3-tech types) | Fast-minus-slow POE {GAP_LIGHT_CI} (<= {W1} lb) and {GAP_MID_CI} ({W1P} to {W2} lb) | {LIGHT_ACTION} |
@@ -106,20 +106,21 @@ We ran {N:fdr.n_tests} tests: {N:fdr.by_family.H} group-level hypotheses, {N:fdr
 | Fast edge, inefficient drill path ({N_FI} players) | POE {POE_FI}; wide {POE_FI_W}, tight {POE_FI_T} (exploratory) | Wider alignment did not offset it; path-shortening stunts are an untested option |
 | Any edge, OL, WR/TE | No detectable speed effect | Do not pay for speed alone |
 
-Edge cells use the drill's path efficiency, which does not predict pressure on its own (interaction p = {P2:matrix.edge_interaction.p}), so judge path directness on tape. The wide/tight split (distance to the nearest tracked blocker) is exploratory; weight bands proxy 3-tech versus nose.
+Edge cells use the drill's path efficiency, which does not predict pressure on its own (interaction p = {P2:matrix.edge_interaction.p}), so judge path directness on tape. Weight bands proxy 3-tech versus nose.
 
-**Week to week (proposed, not tested here).** The pipeline could be refit after every game: xP on the season to date, each rusher's POE shrunk toward what size, draft slot and Combine speed predict, giving a stabilized view that separates a hot month from a trait. For a coordinator, the interior result suggests rotating the fast-for-weight interior rusher in on passing downs.
+**Week to week (proposed, not tested here).** Refitting xP on the season to date and shrinking each rusher's POE toward his Combine-based prior would separate a hot month from a trait.
 
 ## 11. Limitations
 
 - Observational data: no causal claim beyond the mediation assumptions above.
 - {N:n.int_players} interior and {N:n.edge_players} edge players; the decision-matrix cells are small. Treat them as direction, not rules.
+- {LIM_CLASS}
 - The sensor audit covers the 40-yard window only; no quarterback tracking, time to throw or line-up depth, so double-team and alignment are proxies.
 - Edge and OL nulls mean no detectable linear speed effect, not zero.
 
 ## 12. Takeaway
 
-At 10 Hz the 40 is a top-speed test. For interior linemen it means about {F1:p10_p90.ratio}x the pressure rate between slow and fast prospects of the same size and draft slot, and about {PCT0:mediation.interior.player_get_off.prop.est}% of it runs through a faster first move. On the edge, speed is real but the path spends it. Use the trace to find interior rushers who are fast for their weight; read edge rushers off the tape.
+At 10 Hz the 40 is a top-speed test. In 2023-25 data, interior linemen who are fast for their size and draft slot generate about {F1:p10_p90.ratio}x the pressure rate of slow ones, about {PCT0:mediation.interior.player_get_off.prop.est}% of it through a faster first move. {TAKE_CLASS} On the edge, speed is real but the path spends it; read edge rushers off the tape.
 
 ## Appendix: references
 
