@@ -37,7 +37,7 @@ From 2023 to 2025 regular-season tracking we computed pressure per pass rush (in
 
 ## 5. Result: interior defensive linemen
 
-For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34). From the 10th to the 90th percentile of speed (9.1 to 10.7 yd/s) the adjusted pressure rate moves from 6.3% to 11.4%, a ratio of 1.8 (CI 1.1 to 2.8; Fig. 4). In scouting terms: between two interior prospects of the same weight, arm length and draft range, 0.2 s on the 40 is worth about 1.4 pressures per 100 rushes.
+For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34; resampling whole players, 0.99 to 1.42). From the 10th to the 90th percentile of speed (9.1 to 10.7 yd/s) the adjusted pressure rate moves from 6.3% to 11.4%, a ratio of 1.8 (CI 1.1 to 2.8; Fig. 4). In scouting terms: between two interior prospects of the same weight, arm length and draft range, 0.2 s on the 40 is worth about 1.4 pressures per 100 rushes.
 
 **Table 1. Effect of +0.5 yd/s Combine top speed**
 
@@ -57,7 +57,7 @@ For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure 
 ![Fig. 5: Robustness checks (sensor, selection, xP, seasons)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig5_robust.png)
 *Figure 5. The interior effect under every specification: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model. 1.0 is no effect.*
 
-**Top speed, not burst.** Splitting the signal, top speed carries the effect (OR 1.21) and burst carries none (OR 1.03, p = 0.54); the stopwatch 10-yard split adds nothing once the 40 is in (p = 0.35). Reaching and holding speed matters more than the first 10 yards.
+**Top speed, not burst.** Splitting the signal, top speed carries the effect (OR 1.21) and burst carries none (OR 1.03, p = 0.54); the stopwatch 10-yard split adds nothing once the 40 is in (p = 0.35).
 
 ## 6. Selection bias: we only see players who reached the field
 

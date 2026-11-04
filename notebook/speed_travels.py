@@ -782,6 +782,14 @@ try:
     from scipy.stats import chi2 as _chi2
     bb_ = gi_.params[ip_].values; VV_ = gi_.cov_params().loc[ip_, ip_].values; W_ = float(bb_ @ np.linalg.solve(VV_, bb_))
     wc_["interaction_wald_p"] = float(_chi2.sf(W_, len(ip_))); wc_["interaction_df"] = len(ip_)
+    # Pooled player-cluster bootstrap of the headline interior OR (same controls as the main model, plain logit per resample)
+    ids_p = IL.nfl_id.unique(); gp_ = {i: np.where(IL.nfl_id.values == i)[0] for i in ids_p}; rng_p = np.random.default_rng(29); bp_ = []
+    for _ in range(100 if FAST else 1000):
+        Db = IL.iloc[np.concatenate([gp_[i] for i in rng_p.choice(ids_p, len(ids_p))])]
+        try: bp_.append(float(smf.logit(f"pres ~ vs + {b}", data=Db).fit(disp=0).params["vs"]))
+        except Exception: pass
+    res["pooled_boot"] = dict(OR_lo=float(np.exp(np.percentile(bp_, 2.5))), OR_hi=float(np.exp(np.percentile(bp_, 97.5))), n=len(bp_), share_pos=float(np.mean(np.array(bp_) > 0)))
+    print("pooled player bootstrap:", res["pooled_boot"])
     res["within_class"] = wc_; print(json.dumps(wc_, indent=1, default=float))
 except Exception as e: fail("5.8_loco", e)
 

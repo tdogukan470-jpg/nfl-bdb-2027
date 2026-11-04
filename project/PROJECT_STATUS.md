@@ -21,7 +21,7 @@ Scoring: Football 30 / Data Science 30 / Writeup 20 / DataViz 20. PASS/FAIL gate
 - v17 leave-one-class-out: adding speed does NOT improve held-out-class prediction (log-loss gain -0.48e-3 [-1.26e-3, +0.40e-3]); fit on 2024+2025 classes only, interior OR 1.00 [0.72, 1.39]. v21: per-class interior ORs all > 1 (2023 1.27, 2024 1.11, 2025 1.24), interaction p 0.38, only 2023 precise and its player bootstrap 0.98-1.60 touches 1; excluding 2023 with class FE 1.09 [0.75, 1.57]. The earlier "1.00 [0.72, 1.39]" was a fit without class FE (replaced). Stated in the writeup.
 
 ## Known risks
-- Central finding depends on one draft class (MEASURED, see above); per-class sandwich SEs with ~30 clusters look too small (2023 SE 0.040 vs bootstrap far wider); the pooled sandwich CI may be optimistic too (UNKNOWN: no pooled player bootstrap of the OR yet; permutation p 0.0005 exists).
+- Central finding depends on one draft class (MEASURED, see above); per-class sandwich SEs with ~30 clusters look too small (2023 SE 0.040 vs bootstrap far wider); the pooled sandwich CI may be optimistic too (MEASURED v23: pooled player bootstrap CI 0.99-1.42, touches 1; permutation p 0.0005; both now in the writeup).
 - 75 interior players; decision-matrix cells are small (HYPOTHESIS-level guidance, labelled as such in the writeup).
 - Competition rules forbid redistributing data; outputs now hold aggregates only. GitHub repo holds no competition data.
 - Inline figures depend on raw.githubusercontent.com availability (ESTIMATE: low risk; gallery copies are hosted on Kaggle as a fallback).

@@ -87,6 +87,7 @@ else:
     g = xp['logloss_gain_pct']; gtxt = f"log loss improves {g:.1f}% over the league rate" if g >= 0.05 else "log loss only matches the league rate"
     tok["XP_SENTENCE"] = (f"The {mname} wins. Out of fold, AUC is {xp['auc_player_cv']:.2f}, {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
                           "on true dropbacks, pre-snap context predicts which rusher gets home only weakly, so POE stays close to the raw rate.")
+pb_ = res.get("pooled_boot"); tok["BOOTCI"] = (f"; resampling whole players, {pb_['OR_lo']:.2f} to {pb_['OR_hi']:.2f}" if pb_ else "")
 tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]
 def short(n):
