@@ -5,3 +5,6 @@
 3b. Ask user to close one of the two bridge windows (or restart once) so the patched claim logic loads.
 4. Optional football strengthening: a short worked example of the weekly POE leaderboard for 2025 rookies (would need a new figure; current count is 9 of <10, so one figure would have to be merged or dropped).
 5. Monitor the forum for host clarifications until 2027-01-06; re-run and refill if the data files are revised.
+
+6. 2026-11-08: writeup.md in repo (commit after W1) is AHEAD of the Kaggle page. Needs browser to copy body to Kaggle (Update Submission, never Cancel).
+7. Figure fixes from judge review (needs bridge + Kaggle run + gallery re-upload): Fig 5 title must reflect bootstrap/class caveat; Fig 3 right-panel axis/title consistency ('speed 1.0 s in' vs 'first step'), add dot-size legend; Fig 6 replace with speed-residual or band plot (current corr 0.13, labels not in text); check 190 lb 'interior' lineman in weight bands (possible data error); Fig 4 p10/p90 label placement.

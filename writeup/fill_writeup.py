@@ -85,8 +85,8 @@ if xp.get("model", "gbm") == "league rate":
 else:
     mname = {"gbm": "gradient-boosted model", "logit": "logistic regression"}[xp["model"]]
     g = xp['logloss_gain_pct']; gtxt = f"log loss improves {g:.1f}% over the league rate" if g >= 0.05 else "log loss only matches the league rate"
-    tok["XP_SENTENCE"] = (f"The {mname} wins. Out of fold, AUC is {xp['auc_player_cv']:.2f}, {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
-                          "on true dropbacks, pre-snap context predicts which rusher gets home only weakly, so POE stays close to the raw rate.")
+    tok["XP_SENTENCE"] = (f"The {mname} wins narrowly. Out of fold, AUC is {xp['auc_player_cv']:.2f}, {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
+                          "on true dropbacks, pre-snap context predicts which snaps produce pressure only weakly, so POE stays close to the raw rate.")
 pb_ = res.get("pooled_boot"); tok["BOOTCI"] = (f"; resampling whole players, {pb_['OR_lo']:.2f} to {pb_['OR_hi']:.2f}" if pb_ else "")
 tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]
@@ -177,6 +177,12 @@ elif len(_sig) == 2: tok["LIGHT_ACTION"] = "Weigh the split here; both gaps excl
 else: tok["LIGHT_ACTION"] = "Gap is positive but intervals include 0"
 tok["MEDG"] = f"{np.median([y['median_peak_g'] for y in res['audit']['by_year']]):.1f}"
 ec = res["matrix"]["edge_cells"]; ew = res["matrix"]["edge_wide"]
+tok["N_SE"] = str(ec["slow_efficient"]["n"]); tok["POE_SE"] = poe(ec["slow_efficient"]["poe"], ec["slow_efficient"]["lo"], ec["slow_efficient"]["hi"])
+tok["N_SI"] = str(ec["slow_inefficient"]["n"]); tok["POE_SI"] = poe(ec["slow_inefficient"]["poe"], ec["slow_inefficient"]["lo"], ec["slow_inefficient"]["hi"])
+_cuts = res["matrix"]["interior_cuts"]; _ok = [c["cut"] for c in _cuts if c["diff_lo"] > 0]
+tok["CUTSCAN"] = (f"The split cut-off was chosen from {len(_cuts)} scanned values ({_cuts[0]['cut']:.2f} to {_cuts[-1]['cut']:.2f} s); only " + ", ".join(f"{c:.2f}" for c in _ok)
+                  + (" s gives a fast-minus-slow gap whose interval excludes 0" if len(_ok) == 1 else " s give gaps whose intervals exclude 0") + ", so the interior rows are exploratory.")
+_k = res["eb"]["interior"]["kappa"]; tok["EBW"] = f"{100 * 500 / (500 + _k):.0f}"
 tok["N_FE"] = str(ec["fast_efficient"]["n"]); tok["POE_FE"] = poe(ec["fast_efficient"]["poe"], ec["fast_efficient"]["lo"], ec["fast_efficient"]["hi"])
 tok["N_FI"] = str(ec["fast_inefficient"]["n"]); tok["POE_FI"] = poe(ec["fast_inefficient"]["poe"], ec["fast_inefficient"]["lo"], ec["fast_inefficient"]["hi"])
 tok["POE_FI_W"] = f"{ew['fast1_eff0_wide1']['poe_pp']:+.1f}"; tok["POE_FI_T"] = f"{ew['fast1_eff0_wide0']['poe_pp']:+.1f}"
