@@ -87,6 +87,9 @@ else:
     g = xp['logloss_gain_pct']; gtxt = f"log loss improves {g:.1f}% over the league rate" if g >= 0.05 else "log loss only matches the league rate"
     tok["XP_SENTENCE"] = (f"The {mname} wins narrowly. Out of fold, AUC is {xp['auc_player_cv']:.2f}, {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
                           "on true dropbacks, pre-snap context predicts which snaps produce pressure only weakly, so POE stays close to the raw rate.")
+_ip = res.get("il_positions")
+if _ip:
+    _dl = {"DT", "NT", "DE"}; tok["IL_NONDL"] = str(sum(v for k, v in _ip["players"].items() if k not in _dl)); tok["IL_NONDL_PCT"] = f"{100 * sum(v for k, v in _ip['snaps'].items() if k not in _dl) / sum(_ip['snaps'].values()):.0f}"
 pb_ = res.get("pooled_boot"); tok["BOOTCI"] = (f"; resampling whole players, {pb_['OR_lo']:.2f} to {pb_['OR_hi']:.2f}" if pb_ else "")
 tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]
@@ -150,7 +153,7 @@ if lc:
         if wc and nulls:
             c_ = nulls[0][0]; cls_ = sorted(k for k in wc if k.isdigit()); ex_ = wc.get(f"int_excl{c_}_fe")
             prec = [k for k in cls_ if wc[k]["lo"] > 1.0]
-            s_ += (" Per class the estimate " + ("exceeds 1" if all(wc[k]["OR"] > 1 for k in cls_) else "mixed") + " ("
+            s_ += (" Per class (Fig. 6) the estimate " + ("exceeds 1" if all(wc[k]["OR"] > 1 for k in cls_) else "mixed") + " ("
                    + ", ".join(f"{k} {wc[k]['OR']:.2f}" for k in cls_) + f"; interaction p = {wc['interaction_wald_p']:.2f}), but only "
                    + " and ".join(prec) + " is precise" + (f"; without {c_}, OR {ex_['OR']:.2f} [{ex_['lo']:.2f}, {ex_['hi']:.2f}]" if ex_ else "")
                    + f". The data cannot separate a common effect from a {c_}-only one.")

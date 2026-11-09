@@ -26,10 +26,10 @@ From each 10 Hz 40-yard trace we rebuilt start of motion, peak speed over 30 yd,
 
 ## 3. Drill numbers do not travel (Fig. 3)
 
-For {N:translate.n_game} linemen with both drill traces and game tracking, the 40's top speed tracks game speed one second after the snap within each group (interior r = {F2:translate.within_interior.r_vpk_s10.0}, edge r = {F2:translate.within_edge.r_vpk_s10.0}; pooled {F2:translate.r_vpk_s10.0}, inflated by the interior-edge gap). The drill's speed one second in does not (r = {F2:translate.r_drill_s10.0}, CI {F2:translate.r_drill_s10.1} to {F2:translate.r_drill_s10.2}); its peak speed does better (r = {F2:translate.r_drill_speak.0}), but that is top speed again. Trust the 40's speed trace; single-attempt first-step numbers are too noisy to use alone.
+For {N:translate.n_game} linemen with both drill traces and game tracking, the 40's top speed tracks game speed one second after the snap within each group (interior r = {F2:translate.within_interior.r_vpk_s10.0}, edge r = {F2:translate.within_edge.r_vpk_s10.0}; pooled {F2:translate.r_vpk_s10.0}, inflated by the interior-edge gap). The drill's speed one second in does not (r = {F2:translate.r_drill_s10.0}, CI {F2:translate.r_drill_s10.1} to {F2:translate.r_drill_s10.2}); its peak speed does better (r = {F2:translate.r_drill_speak.0}; top speed again). Trust the 40's speed trace; single-attempt first-step numbers are too noisy to use alone.
 
 ![Fig. 3: Does Combine speed translate to in-game speed?]({IMG}fig3_translation.png)
-*Figure 3. Combine measures against in-game speed one second after the snap: the 40's top speed (left) carries over, the pass-rush drill's first step (right) does not.*
+*Figure 3. Combine measures against in-game speed one second after the snap: the 40's top speed (left) carries over, the pass-rush drill's speed 1.0 s in (right) does not. Dot size: game rushes.*
 
 ## 4. Method
 
@@ -39,7 +39,7 @@ From 2023 to 2025 regular-season tracking we computed pressure per pass rush (in
 
 For {N:n.int_players} interior DL and {N:n.int_snaps} rushes, each +0.5 yd/s raises the odds of pressure by {ORPCT:table1.int_pressure}% (OR {OR:table1.int_pressure}, 95% CI {LO:table1.int_pressure} to {HI:table1.int_pressure}{BOOTCI}). From the 10th to the 90th percentile of speed ({F1:p10_p90.v10} to {F1:p10_p90.v90} yd/s) the adjusted pressure rate moves from {PCT1:p10_p90.rate10}% to {PCT1:p10_p90.rate90}%, a ratio of {F1:p10_p90.ratio} (CI {F1:p10_p90.ratio_lo} to {F1:p10_p90.ratio_hi}; Fig. 4). In scouting terms: between two interior prospects of the same weight, arm length and draft range, {STOPWATCH} s on the 40 is worth about {PRESS100} pressures per 100 rushes.
 
-**Table 1. Effect of +0.5 yd/s Combine top speed**
+**Table 1. Effect of +0.5 yd/s Combine top speed.** *Interior = lined up inside on the snap; {IL_NONDL} of the {N:n.int_players} are linebackers or defensive backs ({IL_NONDL_PCT}% of rushes). Roster DT, NT or DE only: OR {ORB:robust.Roster DT, NT or DE only}, {N:robust.Roster DT, NT or DE only.players} players. Interior row with whole players resampled: {F2:pooled_boot.OR_lo} to {F2:pooled_boot.OR_hi}.*
 
 | Group | Outcome | Players / snaps | Effect (95% CI) | p |
 |---|---|---|---|---|
@@ -50,12 +50,12 @@ For {N:n.int_players} interior DL and {N:n.int_snaps} rushes, each +0.5 yd/s rai
 | WR / TE, deep | Separation (yd) | {N:table1.wr_n.deep_players} / {N:table1.wr_n.deep_snaps} | {LINB:table1.wr_sep_deep} | {P:table1.wr_sep_deep.p} |
 
 ![Fig. 4: Pressure rate vs Combine top speed (interior DL vs edge)]({IMG}fig4_dose.png)
-*Figure 4. Adjusted pressure rate against Combine top speed with cluster-bootstrap bands. Interior linemen rise across the speed range; the edge slope is not distinguishable from zero.*
+*Figure 4. Adjusted pressure rate against Combine top speed with cluster-bootstrap bands. Interior linemen rise across the speed range; the edge slope is weak and its interval includes zero.*
 
 **Stress tests (Fig. 5).** Across {N_RB} alternative specifications the odds ratio runs from {RB_MIN} to {RB_MAX}. {WEAK_ROWS} Dropping any single player gives {F2:loo_OR_range.0} to {F2:loo_OR_range.1}; a permutation test gives p {PERM}. Single seasons share draft classes, so they are not independent checks.
 
 ![Fig. 5: Robustness checks (sensor, selection, xP, seasons)]({IMG}fig5_robust.png)
-*Figure 5. The interior effect under every specification: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model. 1.0 is no effect.*
+*Figure 5. The interior effect under every specification: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
 
 **Top speed, not burst.** Top speed carries the effect (OR {OR:decomp.top}) and burst carries none (OR {OR:decomp.burst}, p = {P2:decomp.burst.p}); the stopwatch 10-yard split adds nothing once the 40 is in (p = {P2:decomp_stopwatch.ten.p}).
 
@@ -71,8 +71,6 @@ Pressure Over Expected (POE) is pressure minus xP. With xP as an offset, interio
 
 **Hierarchical shrinkage.** A Beta-Binomial model shrinks each player's POE toward a prior set by his context, speed, weight, arm length and draft slot; the SD of player POE drops from {F1:eb.interior.sd_raw_poe_pp} to {F1:eb.interior.sd_shrunk_poe_pp} points. Speed in the prior carries OR {F2:eb.interior.OR} (likelihood-ratio p = {P3:eb.interior.lr_p}, but player bootstrap {F2:eb.interior.OR_lo} to {F2:eb.interior.OR_hi}), so this check is supportive, not decisive. Edge: OR {F2:eb.edge.OR} ({F2:eb.edge.OR_lo} to {F2:eb.edge.OR_hi}). The prior is so strong that at 500 rushes a player's own record gets {EBW}% weight, so we do not rank players with it.
 
-![Fig. 6: Scouting view, interior DL vs expectation]({IMG}fig6_scouting.png)
-*Figure 6. Scouting view: each interior lineman with 100+ rushes placed by Combine weight and top speed, coloured by pressures per 100 rushes above or below what draft slot and size predict. An illustration of the method, not a recommendation list: single player-seasons are noisy.*
 
 ## 8. How speed becomes pressure: formal mediation
 
@@ -86,8 +84,11 @@ Imai-Keele-Tingley mediation [5] (1,000 draws), in pressure points per 100 rushe
 
 We fit through 2024 and test 2025 (Fig. 7). For {N:forward.eval_players} interior linemen with 75+ snaps, adding speed lifts the player-level Spearman correlation from {F2:forward.rho_draft+size} to {F2:forward.rho_draft+size+speed}; the log-loss gain is positive in {PCT0:forward.dll_pos_share}% of bootstrap resamples but its interval includes zero. {LOCO_SENTENCE}
 
+![Fig. 6: Interior effect by draft class]({IMG}fig6_scouting.png)
+*Figure 6. Interior speed effect fit separately by draft class. Blue: clustered-SE intervals; orange: whole-player bootstrap. Every class leans positive; only 2023 is precise.*
+
 ![Fig. 7: Out-of-time check (fit through 2024, test 2025)]({IMG}fig7_forward.png)
-*Figure 7. Models fit on 2023 and 2024 predict 2025 interior pressure rates. Adding Combine speed lifts the rank correlation from {F2:forward.rho_draft+size} to {F2:forward.rho_draft+size+speed}; the change has a 95% interval of {F2:forward.drho_ci.0} to {F2:forward.drho_ci.1}.*
+*Figure 7. Models fit on 2023 and 2024 predict 2025 interior pressure rates; most 2025 rates sit above the predictions. Adding Combine speed lifts the rank correlation from {F2:forward.rho_draft+size} to {F2:forward.rho_draft+size+speed}; the change has a 95% interval of {F2:forward.drho_ci.0} to {F2:forward.drho_ci.1}.*
 
 Of {N:fdr.n_tests} tests, after Benjamini-Hochberg correction [6] {N:fdr.n_q05_all} have q < 0.05. {FDR_HEADLINE}
 

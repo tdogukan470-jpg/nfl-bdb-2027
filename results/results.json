@@ -218,6 +218,15 @@
    "hi": 1.3938706058120385,
    "p": 1.1053207237224171e-07
   },
+  "Roster DT, NT or DE only": {
+   "b": 0.22092153280205207,
+   "se": 0.04321562415771574,
+   "OR": 1.2472255604293816,
+   "lo": 1.1459327216447335,
+   "hi": 1.357472013152487,
+   "p": 3.186384464197385e-07,
+   "players": 56
+  },
   "IPW selection weights (any rush snap)": {
    "b": 0.16065440318833563,
    "se": 0.06299342535928915,
@@ -1039,6 +1048,28 @@
   },
   "n_players_2024_int": 29
  },
+ "il_positions": {
+  "players": {
+   "CB": 1,
+   "DE": 22,
+   "DT": 30,
+   "FS": 1,
+   "ILB": 1,
+   "NT": 4,
+   "OLB": 12,
+   "SS": 4
+  },
+  "snaps": {
+   "DT": 5860,
+   "DE": 2520,
+   "NT": 686,
+   "OLB": 297,
+   "SS": 11,
+   "ILB": 2,
+   "FS": 1,
+   "CB": 1
+  }
+ },
  "selection": {
   "universe": 510,
   "share_any_snap": 0.7862745098039216,
@@ -1641,14 +1672,14 @@
   }
  },
  "fdr": {
-  "n_tests": 113,
+  "n_tests": 114,
   "by_family": {
    "M": 76,
-   "R": 22,
+   "R": 23,
    "H": 15
   },
-  "n_q05_all": 61,
-  "n_q05_family": 61,
+  "n_q05_all": 62,
+  "n_q05_family": 62,
   "table": [
    {
     "test": "Table 1: int_pressure",
@@ -1662,63 +1693,63 @@
     "p": 0.20074,
     "family": "H",
     "q_family": 0.43016,
-    "q_all": 0.29082
+    "q_all": 0.28968
    },
    {
     "test": "Table 1: ol_pressure_allowed",
     "p": 0.67223,
     "family": "H",
     "q_family": 0.76897,
-    "q_all": 0.7375
+    "q_all": 0.73687
    },
    {
     "test": "Table 1: wr_sep_all",
     "p": 0.7177,
     "family": "H",
     "q_family": 0.76897,
-    "q_all": 0.77981
+    "q_all": 0.77922
    },
    {
     "test": "Table 1: wr_sep_deep",
     "p": 0.85033,
     "family": "H",
     "q_family": 0.85033,
-    "q_all": 0.87352
+    "q_all": 0.87331
    },
    {
     "test": "Decomposition: top speed",
     "p": 0.00037,
     "family": "H",
     "q_family": 0.00112,
-    "q_all": 0.00108
+    "q_all": 0.00107
    },
    {
     "test": "Decomposition: start-phase burst",
     "p": 0.53696,
     "family": "H",
     "q_family": 0.73222,
-    "q_all": 0.6387
+    "q_all": 0.63764
    },
    {
     "test": "Stopwatch 40",
     "p": 0.00034,
     "family": "H",
     "q_family": 0.00112,
-    "q_all": 0.00101
+    "q_all": 0.00099
    },
    {
     "test": "Stopwatch 10-yd split",
     "p": 0.35389,
     "family": "H",
     "q_family": 0.66354,
-    "q_all": 0.46499
+    "q_all": 0.46371
    },
    {
     "test": "POE (xP offset), interior",
     "p": 1e-05,
     "family": "H",
     "q_family": 6e-05,
-    "q_all": 5e-05
+    "q_all": 4e-05
    },
    {
     "test": "POE linear, interior",
@@ -1732,28 +1763,28 @@
     "p": 0.00337,
     "family": "H",
     "q_family": 0.00843,
-    "q_all": 0.00668
+    "q_all": 0.00663
    },
    {
     "test": "POE (xP offset), edge",
     "p": 0.4089,
     "family": "H",
     "q_family": 0.67959,
-    "q_all": 0.50224
+    "q_all": 0.50123
    },
    {
     "test": "POE linear, edge",
     "p": 0.45306,
     "family": "H",
     "q_family": 0.67959,
-    "q_all": 0.54464
+    "q_all": 0.54367
    },
    {
     "test": "Beta-Binomial speed effect, edge",
     "p": 0.5866,
     "family": "H",
     "q_family": 0.73325,
-    "q_all": 0.67235
+    "q_all": 0.67158
    },
    {
     "test": "interior: speed -> player_get_off (path a)",
@@ -1774,14 +1805,14 @@
     "p": 0.00131,
     "family": "M",
     "q_family": 0.0031,
-    "q_all": 0.00284
+    "q_all": 0.00281
    },
    {
     "test": "interior: speed -> s_10 (path a)",
     "p": 0.37418,
     "family": "M",
     "q_family": 0.47753,
-    "q_all": 0.47334
+    "q_all": 0.47229
    },
    {
     "test": "interior: s_10 -> pressure (path b)",
@@ -1795,14 +1826,14 @@
     "p": 0.00028,
     "family": "M",
     "q_family": 0.00101,
-    "q_all": 0.00085
+    "q_all": 0.00084
    },
    {
     "test": "interior: speed -> s_20 (path a)",
     "p": 0.78147,
     "family": "M",
     "q_family": 0.8365,
-    "q_all": 0.82529
+    "q_all": 0.82488
    },
    {
     "test": "interior: s_20 -> pressure (path b)",
@@ -1816,14 +1847,14 @@
     "p": 0.00212,
     "family": "M",
     "q_family": 0.00488,
-    "q_all": 0.00452
+    "q_all": 0.00447
    },
    {
     "test": "interior: speed -> smax_pre (path a)",
     "p": 0.44109,
     "family": "M",
     "q_family": 0.5407,
-    "q_all": 0.53595
+    "q_all": 0.53494
    },
    {
     "test": "interior: smax_pre -> pressure (path b)",
@@ -1837,35 +1868,35 @@
     "p": 0.04899,
     "family": "M",
     "q_family": 0.09309,
-    "q_all": 0.08517
+    "q_all": 0.08462
    },
    {
     "test": "interior: speed -> disp_10 (path a)",
     "p": 0.0097,
     "family": "M",
     "q_family": 0.02048,
-    "q_all": 0.0189
+    "q_all": 0.01874
    },
    {
     "test": "interior: disp_10 -> pressure (path b)",
     "p": 2e-05,
     "family": "M",
     "q_family": 0.0001,
-    "q_all": 9e-05
+    "q_all": 8e-05
    },
    {
     "test": "interior: direct speed effect given disp_10",
     "p": 0.00021,
     "family": "M",
     "q_family": 0.0008,
-    "q_all": 0.0007
+    "q_all": 0.00068
    },
    {
     "test": "interior: speed -> disp_20 (path a)",
     "p": 0.40142,
     "family": "M",
     "q_family": 0.50013,
-    "q_all": 0.49846
+    "q_all": 0.49741
    },
    {
     "test": "interior: disp_20 -> pressure (path b)",
@@ -1879,21 +1910,21 @@
     "p": 0.00095,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00226
+    "q_all": 0.00224
    },
    {
     "test": "interior: speed -> path_eff_20 (path a)",
     "p": 0.59161,
     "family": "M",
     "q_family": 0.68512,
-    "q_all": 0.67235
+    "q_all": 0.67158
    },
    {
     "test": "interior: path_eff_20 -> pressure (path b)",
     "p": 0.00319,
     "family": "M",
     "q_family": 0.00692,
-    "q_all": 0.00643
+    "q_all": 0.00637
    },
    {
     "test": "interior: direct speed effect given path_eff_20",
@@ -1907,7 +1938,7 @@
     "p": 0.09435,
     "family": "M",
     "q_family": 0.16676,
-    "q_all": 0.15451
+    "q_all": 0.15365
    },
    {
     "test": "interior: slip_10 -> pressure (path b)",
@@ -1928,7 +1959,7 @@
     "p": 0.57701,
     "family": "M",
     "q_family": 0.68512,
-    "q_all": 0.67235
+    "q_all": 0.67158
    },
    {
     "test": "edge: player_get_off -> pressure (path b)",
@@ -1942,14 +1973,14 @@
     "p": 0.19351,
     "family": "M",
     "q_family": 0.30014,
-    "q_all": 0.28398
+    "q_all": 0.28282
    },
    {
     "test": "edge: speed -> s_10 (path a)",
     "p": 4e-05,
     "family": "M",
     "q_family": 0.00015,
-    "q_all": 0.00014
+    "q_all": 0.00013
    },
    {
     "test": "edge: s_10 -> pressure (path b)",
@@ -1970,7 +2001,7 @@
     "p": 0.00017,
     "family": "M",
     "q_family": 0.0007,
-    "q_all": 0.0006
+    "q_all": 0.00059
    },
    {
     "test": "edge: s_20 -> pressure (path b)",
@@ -1984,7 +2015,7 @@
     "p": 0.74104,
     "family": "M",
     "q_family": 0.81622,
-    "q_all": 0.79751
+    "q_all": 0.79697
    },
    {
     "test": "edge: speed -> smax_pre (path a)",
@@ -2005,14 +2036,14 @@
     "p": 0.10807,
     "family": "M",
     "q_family": 0.18667,
-    "q_all": 0.172
+    "q_all": 0.17112
    },
    {
     "test": "edge: speed -> disp_10 (path a)",
     "p": 0.75307,
     "family": "M",
     "q_family": 0.81762,
-    "q_all": 0.8028
+    "q_all": 0.80234
    },
    {
     "test": "edge: disp_10 -> pressure (path b)",
@@ -2026,14 +2057,14 @@
     "p": 0.127,
     "family": "M",
     "q_family": 0.21448,
-    "q_all": 0.19658
+    "q_all": 0.19564
    },
    {
     "test": "edge: speed -> disp_20 (path a)",
     "p": 0.08485,
     "family": "M",
     "q_family": 0.15531,
-    "q_all": 0.14263
+    "q_all": 0.14181
    },
    {
     "test": "edge: disp_20 -> pressure (path b)",
@@ -2047,238 +2078,238 @@
     "p": 0.3742,
     "family": "M",
     "q_family": 0.47753,
-    "q_all": 0.47334
+    "q_all": 0.47229
    },
    {
     "test": "edge: speed -> path_eff_20 (path a)",
     "p": 0.00076,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00207
+    "q_all": 0.00204
    },
    {
     "test": "edge: path_eff_20 -> pressure (path b)",
     "p": 0.00105,
     "family": "M",
     "q_family": 0.00257,
-    "q_all": 0.00233
+    "q_all": 0.0023
    },
    {
     "test": "edge: direct speed effect given path_eff_20",
     "p": 0.03841,
     "family": "M",
     "q_family": 0.07683,
-    "q_all": 0.0689
+    "q_all": 0.06843
    },
    {
     "test": "edge: speed -> slip_10 (path a)",
     "p": 0.80776,
     "family": "M",
     "q_family": 0.85264,
-    "q_all": 0.84516
+    "q_all": 0.84482
    },
    {
     "test": "edge: slip_10 -> pressure (path b)",
     "p": 0.08583,
     "family": "M",
     "q_family": 0.15531,
-    "q_all": 0.14263
+    "q_all": 0.14181
    },
    {
     "test": "edge: direct speed effect given slip_10",
     "p": 0.21445,
     "family": "M",
     "q_family": 0.32596,
-    "q_all": 0.30675
+    "q_all": 0.30559
    },
    {
     "test": "edge: edge_drill_bend_retention",
     "p": 0.60799,
     "family": "M",
     "q_family": 0.68512,
-    "q_all": 0.67911
+    "q_all": 0.67847
    },
    {
     "test": "edge: edge_drill_path_eff",
     "p": 0.2307,
     "family": "M",
     "q_family": 0.34379,
-    "q_all": 0.32586
+    "q_all": 0.32469
    },
    {
     "test": "edge: edge_drill_smin_turn",
     "p": 0.85991,
     "family": "M",
     "q_family": 0.88315,
-    "q_all": 0.87541
+    "q_all": 0.87527
    },
    {
     "test": "edge: speed_x_arm",
     "p": 0.34207,
     "family": "M",
     "q_family": 0.47753,
-    "q_all": 0.46499
+    "q_all": 0.46371
    },
    {
     "test": "edge: speed_x_wing",
     "p": 0.84199,
     "family": "M",
     "q_family": 0.87659,
-    "q_all": 0.87289
+    "q_all": 0.87261
    },
    {
     "test": "edge: arm_main",
     "p": 0.17391,
     "family": "M",
     "q_family": 0.28121,
-    "q_all": 0.26202
+    "q_all": 0.26086
    },
    {
     "test": "interior: ACME via player_get_off",
     "p": 0.001,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00226
+    "q_all": 0.00224
    },
    {
     "test": "interior: ADE given player_get_off",
     "p": 0.001,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00226
+    "q_all": 0.00224
    },
    {
     "test": "interior: ACME via s_10",
     "p": 0.361,
     "family": "M",
     "q_family": 0.47753,
-    "q_all": 0.46889
+    "q_all": 0.46766
    },
    {
     "test": "interior: ADE given s_10",
     "p": 0.001,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00226
+    "q_all": 0.00224
    },
    {
     "test": "interior: ACME via path_eff_20",
     "p": 0.591,
     "family": "M",
     "q_family": 0.68512,
-    "q_all": 0.67235
+    "q_all": 0.67158
    },
    {
     "test": "interior: ADE given path_eff_20",
     "p": 0.001,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00226
+    "q_all": 0.00224
    },
    {
     "test": "interior: ACME via adx_20",
     "p": 0.281,
     "family": "M",
     "q_family": 0.40294,
-    "q_all": 0.38723
+    "q_all": 0.38595
    },
    {
     "test": "interior: ADE given adx_20",
     "p": 0.003,
     "family": "M",
     "q_family": 0.00671,
-    "q_all": 0.00616
+    "q_all": 0.00611
    },
    {
     "test": "interior: ACME via ady_20",
     "p": 0.595,
     "family": "M",
     "q_family": 0.68512,
-    "q_all": 0.67235
+    "q_all": 0.67158
    },
    {
     "test": "interior: ADE given ady_20",
     "p": 0.001,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00226
+    "q_all": 0.00224
    },
    {
     "test": "edge: ACME via path_eff_20",
     "p": 0.001,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00226
+    "q_all": 0.00224
    },
    {
     "test": "edge: ADE given path_eff_20",
     "p": 0.037,
     "family": "M",
     "q_family": 0.076,
-    "q_all": 0.06744
+    "q_all": 0.06695
    },
    {
     "test": "edge: ACME via ady_20",
     "p": 0.045,
     "family": "M",
     "q_family": 0.08769,
-    "q_all": 0.07945
+    "q_all": 0.07892
    },
    {
     "test": "edge: ADE given ady_20",
     "p": 0.353,
     "family": "M",
     "q_family": 0.47753,
-    "q_all": 0.46499
+    "q_all": 0.46371
    },
    {
     "test": "edge: ACME via adx_20",
     "p": 0.353,
     "family": "M",
     "q_family": 0.47753,
-    "q_all": 0.46499
+    "q_all": 0.46371
    },
    {
     "test": "edge: ADE given adx_20",
     "p": 0.241,
     "family": "M",
     "q_family": 0.35223,
-    "q_all": 0.33621
+    "q_all": 0.33505
    },
    {
     "test": "edge: ACME via disp_20",
     "p": 0.143,
     "family": "M",
     "q_family": 0.23626,
-    "q_all": 0.21836
+    "q_all": 0.21736
    },
    {
     "test": "edge: ADE given disp_20",
     "p": 0.377,
     "family": "M",
     "q_family": 0.47753,
-    "q_all": 0.47334
+    "q_all": 0.47229
    },
    {
     "test": "edge: ACME via player_get_off",
     "p": 0.613,
     "family": "M",
     "q_family": 0.68512,
-    "q_all": 0.67911
+    "q_all": 0.67847
    },
    {
     "test": "edge: ADE given player_get_off",
     "p": 0.185,
     "family": "M",
     "q_family": 0.29292,
-    "q_all": 0.27507
+    "q_all": 0.2739
    },
    {
     "test": "edge: ACME via s_10",
     "p": 0.001,
     "family": "M",
     "q_family": 0.00253,
-    "q_all": 0.00226
+    "q_all": 0.00224
    },
    {
     "test": "edge: ADE given s_10",
@@ -2298,8 +2329,8 @@
     "test": "Robustness: Without draft-class fixed effects",
     "p": 0.00027,
     "family": "R",
-    "q_family": 0.00046,
-    "q_all": 0.00085
+    "q_family": 0.00045,
+    "q_all": 0.00084
    },
    {
     "test": "Robustness: All games incl. preseason and playoffs",
@@ -2313,7 +2344,7 @@
     "p": 0.11859,
     "family": "R",
     "q_family": 0.11859,
-    "q_all": 0.18613
+    "q_all": 0.1852
    },
    {
     "test": "Robustness: + opposing offense fixed effects",
@@ -2327,21 +2358,21 @@
     "p": 1e-05,
     "family": "R",
     "q_family": 3e-05,
-    "q_all": 5e-05
+    "q_all": 4e-05
    },
    {
     "test": "Robustness: Quick pressure only (<= 2.5 s)",
     "p": 0.02308,
     "family": "R",
-    "q_family": 0.02673,
-    "q_all": 0.04276
+    "q_family": 0.02655,
+    "q_all": 0.04244
    },
    {
     "test": "Robustness: Late pressure only (> 2.5 s)",
     "p": 0.00224,
     "family": "R",
-    "q_family": 0.00307,
-    "q_all": 0.00468
+    "q_family": 0.00302,
+    "q_all": 0.00463
    },
    {
     "test": "Robustness: QB hurry",
@@ -2354,29 +2385,29 @@
     "test": "Robustness: Sack",
     "p": 0.10148,
     "family": "R",
-    "q_family": 0.10631,
-    "q_all": 0.16381
+    "q_family": 0.10609,
+    "q_all": 0.16293
    },
    {
     "test": "Robustness: Stopwatch 40 instead (per 0.2 s faster)",
     "p": 0.00026,
     "family": "R",
-    "q_family": 0.00046,
-    "q_all": 0.00085
+    "q_family": 0.00045,
+    "q_all": 0.00084
    },
    {
     "test": "Robustness: Season 2023 only",
     "p": 0.00077,
     "family": "R",
-    "q_family": 0.00113,
-    "q_all": 0.00207
+    "q_family": 0.0011,
+    "q_all": 0.00204
    },
    {
     "test": "Robustness: Season 2024 only",
     "p": 0.07542,
     "family": "R",
-    "q_family": 0.08297,
-    "q_all": 0.12914
+    "q_family": 0.08261,
+    "q_all": 0.12833
    },
    {
     "test": "Robustness: Season 2025 only",
@@ -2407,39 +2438,46 @@
     "q_all": 0.0
    },
    {
+    "test": "Robustness: Roster DT, NT or DE only",
+    "p": 0.0,
+    "family": "R",
+    "q_family": 0.0,
+    "q_all": 0.0
+   },
+   {
     "test": "Robustness: IPW selection weights (any rush snap)",
     "p": 0.01076,
     "family": "R",
-    "q_family": 0.01315,
-    "q_all": 0.02027
+    "q_family": 0.01303,
+    "q_all": 0.02011
    },
    {
     "test": "Robustness: Heckman-type control function (any rush snap)",
     "p": 0.0001,
     "family": "R",
-    "q_family": 0.00021,
-    "q_all": 0.00037
+    "q_family": 0.0002,
+    "q_all": 0.00036
    },
    {
     "test": "Robustness: IPW selection weights (100+ rush snaps)",
     "p": 0.0106,
     "family": "R",
-    "q_family": 0.01315,
-    "q_all": 0.02027
+    "q_family": 0.01303,
+    "q_all": 0.02011
    },
    {
     "test": "Robustness: Heckman-type control function (100+ rush snaps)",
     "p": 0.00059,
     "family": "R",
-    "q_family": 0.00093,
-    "q_all": 0.00167
+    "q_family": 0.00091,
+    "q_all": 0.00164
    },
    {
     "test": "Robustness: Context-adjusted (xP offset)",
     "p": 1e-05,
     "family": "R",
     "q_family": 3e-05,
-    "q_all": 5e-05
+    "q_all": 4e-05
    }
   ]
  },

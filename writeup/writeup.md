@@ -26,10 +26,10 @@ From each 10 Hz 40-yard trace we rebuilt start of motion, peak speed over 30 yd,
 
 ## 3. Drill numbers do not travel (Fig. 3)
 
-For 59 linemen with both drill traces and game tracking, the 40's top speed tracks game speed one second after the snap within each group (interior r = 0.39, edge r = 0.37; pooled 0.77, inflated by the interior-edge gap). The drill's speed one second in does not (r = 0.13, CI -0.22 to 0.52); its peak speed does better (r = 0.47), but that is top speed again. Trust the 40's speed trace; single-attempt first-step numbers are too noisy to use alone.
+For 59 linemen with both drill traces and game tracking, the 40's top speed tracks game speed one second after the snap within each group (interior r = 0.39, edge r = 0.37; pooled 0.77, inflated by the interior-edge gap). The drill's speed one second in does not (r = 0.13, CI -0.22 to 0.52); its peak speed does better (r = 0.47; top speed again). Trust the 40's speed trace; single-attempt first-step numbers are too noisy to use alone.
 
 ![Fig. 3: Does Combine speed translate to in-game speed?](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig3_translation.png)
-*Figure 3. Combine measures against in-game speed one second after the snap: the 40's top speed (left) carries over, the pass-rush drill's first step (right) does not.*
+*Figure 3. Combine measures against in-game speed one second after the snap: the 40's top speed (left) carries over, the pass-rush drill's speed 1.0 s in (right) does not. Dot size: game rushes.*
 
 ## 4. Method
 
@@ -39,7 +39,7 @@ From 2023 to 2025 regular-season tracking we computed pressure per pass rush (in
 
 For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34; resampling whole players, 0.99 to 1.42). From the 10th to the 90th percentile of speed (9.1 to 10.7 yd/s) the adjusted pressure rate moves from 6.3% to 11.4%, a ratio of 1.8 (CI 1.1 to 2.8; Fig. 4). In scouting terms: between two interior prospects of the same weight, arm length and draft range, 0.2 s on the 40 is worth about 1.4 pressures per 100 rushes.
 
-**Table 1. Effect of +0.5 yd/s Combine top speed**
+**Table 1. Effect of +0.5 yd/s Combine top speed.** *Interior = lined up inside on the snap; 19 of the 75 are linebackers or defensive backs (3% of rushes). Roster DT, NT or DE only: OR 1.25 [1.15, 1.36], 56 players. Interior row with whole players resampled: 0.99 to 1.42.*
 
 | Group | Outcome | Players / snaps | Effect (95% CI) | p |
 |---|---|---|---|---|
@@ -50,12 +50,12 @@ For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure 
 | WR / TE, deep | Separation (yd) | 100 / 10,978 | -0.008 [-0.089, +0.073] | 0.85 |
 
 ![Fig. 4: Pressure rate vs Combine top speed (interior DL vs edge)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig4_dose.png)
-*Figure 4. Adjusted pressure rate against Combine top speed with cluster-bootstrap bands. Interior linemen rise across the speed range; the edge slope is not distinguishable from zero.*
+*Figure 4. Adjusted pressure rate against Combine top speed with cluster-bootstrap bands. Interior linemen rise across the speed range; the edge slope is weak and its interval includes zero.*
 
-**Stress tests (Fig. 5).** Across 21 alternative specifications the odds ratio runs from 1.16 to 1.30. Only team fixed effects, sacks and the 2024 season alone have intervals touching 1.0. Dropping any single player gives 1.19 to 1.25; a permutation test gives p < 0.001. Single seasons share draft classes, so they are not independent checks.
+**Stress tests (Fig. 5).** Across 22 alternative specifications the odds ratio runs from 1.16 to 1.30. Only team fixed effects, sacks and the 2024 season alone have intervals touching 1.0. Dropping any single player gives 1.19 to 1.25; a permutation test gives p < 0.001. Single seasons share draft classes, so they are not independent checks.
 
 ![Fig. 5: Robustness checks (sensor, selection, xP, seasons)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig5_robust.png)
-*Figure 5. The interior effect under every specification: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model. 1.0 is no effect.*
+*Figure 5. The interior effect under every specification: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
 
 **Top speed, not burst.** Top speed carries the effect (OR 1.21) and burst carries none (OR 1.03, p = 0.54); the stopwatch 10-yard split adds nothing once the 40 is in (p = 0.35).
 
@@ -71,8 +71,6 @@ Pressure Over Expected (POE) is pressure minus xP. With xP as an offset, interio
 
 **Hierarchical shrinkage.** A Beta-Binomial model shrinks each player's POE toward a prior set by his context, speed, weight, arm length and draft slot; the SD of player POE drops from 13.2 to 1.6 points. Speed in the prior carries OR 1.20 (likelihood-ratio p = 0.003, but player bootstrap 0.93 to 1.34), so this check is supportive, not decisive. Edge: OR 1.04 (0.86 to 1.24). The prior is so strong that at 500 rushes a player's own record gets 3% weight, so we do not rank players with it.
 
-![Fig. 6: Scouting view, interior DL vs expectation](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig6_scouting.png)
-*Figure 6. Scouting view: each interior lineman with 100+ rushes placed by Combine weight and top speed, coloured by pressures per 100 rushes above or below what draft slot and size predict. An illustration of the method, not a recommendation list: single player-seasons are noisy.*
 
 ## 8. How speed becomes pressure: formal mediation
 
@@ -84,12 +82,15 @@ Imai-Keele-Tingley mediation [5] (1,000 draws), in pressure points per 100 rushe
 
 ## 9. Out-of-sample checks and multiple testing
 
-We fit through 2024 and test 2025 (Fig. 7). For 22 interior linemen with 75+ snaps, adding speed lifts the player-level Spearman correlation from 0.67 to 0.72; the log-loss gain is positive in 92% of bootstrap resamples but its interval includes zero. The stricter test fails. Holding out each draft class, adding speed does not improve held-out prediction (log-loss gain -0.48 x 10^-3, 95% CI -1.26 to +0.40; player Spearman 0.32 without speed, 0.25 with). Per class the estimate exceeds 1 (2023 1.27, 2024 1.11, 2025 1.24; interaction p = 0.38), but only 2023 is precise; without 2023, OR 1.09 [0.75, 1.57]. The data cannot separate a common effect from a 2023-only one.
+We fit through 2024 and test 2025 (Fig. 7). For 22 interior linemen with 75+ snaps, adding speed lifts the player-level Spearman correlation from 0.67 to 0.72; the log-loss gain is positive in 92% of bootstrap resamples but its interval includes zero. The stricter test fails. Holding out each draft class, adding speed does not improve held-out prediction (log-loss gain -0.48 x 10^-3, 95% CI -1.26 to +0.40; player Spearman 0.32 without speed, 0.25 with). Per class (Fig. 6) the estimate exceeds 1 (2023 1.27, 2024 1.11, 2025 1.24; interaction p = 0.38), but only 2023 is precise; without 2023, OR 1.09 [0.75, 1.57]. The data cannot separate a common effect from a 2023-only one.
+
+![Fig. 6: Interior effect by draft class](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig6_scouting.png)
+*Figure 6. Interior speed effect fit separately by draft class. Blue: clustered-SE intervals; orange: whole-player bootstrap. Every class leans positive; only 2023 is precise.*
 
 ![Fig. 7: Out-of-time check (fit through 2024, test 2025)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig7_forward.png)
-*Figure 7. Models fit on 2023 and 2024 predict 2025 interior pressure rates. Adding Combine speed lifts the rank correlation from 0.67 to 0.72; the change has a 95% interval of -0.11 to 0.23.*
+*Figure 7. Models fit on 2023 and 2024 predict 2025 interior pressure rates; most 2025 rates sit above the predictions. Adding Combine speed lifts the rank correlation from 0.67 to 0.72; the change has a 95% interval of -0.11 to 0.23.*
 
-Of 113 tests, after Benjamini-Hochberg correction [6] 61 have q < 0.05. Every interior headline test (Table 1, top speed, stopwatch 40, POE) has q at or below 0.002 except the Beta-Binomial likelihood-ratio test (q = 0.007; its player bootstrap interval includes 1); no edge, OL or WR headline test has q below 0.2.
+Of 114 tests, after Benjamini-Hochberg correction [6] 62 have q < 0.05. Every interior headline test (Table 1, top speed, stopwatch 40, POE) has q at or below 0.002 except the Beta-Binomial likelihood-ratio test (q = 0.007; its player bootstrap interval includes 1); no edge, OL or WR headline test has q below 0.2.
 
 ## 10. How a team uses this
 

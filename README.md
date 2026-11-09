@@ -7,7 +7,7 @@ Entry for the Kaggle **NFL Big Data Bowl 2027** (Open track) by Doğukan Turan.
 
 ## Summary
 
-At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch time: r = -0.98). For **interior defensive linemen** (75 players, 9,378 regular-season dropback rushes) each +0.5 yd/s of Combine top speed raises the odds of generating pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34; resampling whole players, 0.99 to 1.42), with weight, arm length, draft slot, draft class, down and distance held fixed. From the 10th to the 90th percentile of speed the adjusted pressure rate moves from 6.3% to 11.4%. The effect survives sensor cleaning (Savitzky-Golay and a 2.5 g limiter), inverse-probability weighting and a Heckman-type control function for selection into the NFL, and a cross-validated expected-pressure context model (POE OR 1.22); a Beta-Binomial shrinkage check is supportive (likelihood-ratio p = 0.003) but its player bootstrap interval (0.93 to 1.34) includes 1. Of 21 robustness checks, only team fixed effects, sacks and the 2024 season alone have intervals touching 1.0. **Out of class, the effect does not hold:** The stricter test fails. Holding out each draft class, adding speed does not improve held-out prediction (log-loss gain -0.48 x 10^-3, 95% CI -1.26 to +0.40; player Spearman 0.32 without speed, 0.25 with). Per class the estimate exceeds 1 (2023 1.27, 2024 1.11, 2025 1.24; interaction p = 0.38), but only 2023 is precise; without 2023, OR 1.09 [0.75, 1.57]. The data cannot separate a common effect from a 2023-only one. Imai-Keele-Tingley mediation puts 20% (9% to 43%) of the effect through a faster get-off. **Edge rushers, offensive linemen and WR/TE show no detectable speed effect**; on the edge, speed reaches the field but is spent on less direct paths. Drill "first-step" numbers have test-retest reliability of 0.36 to 0.54 and do not travel to games.
+At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch time: r = -0.98). For **interior defensive linemen** (75 players, 9,378 regular-season dropback rushes) each +0.5 yd/s of Combine top speed raises the odds of generating pressure by 22% (OR 1.22, 95% CI 1.12 to 1.34; resampling whole players, 0.99 to 1.42), with weight, arm length, draft slot, draft class, down and distance held fixed. From the 10th to the 90th percentile of speed the adjusted pressure rate moves from 6.3% to 11.4%. The effect survives sensor cleaning (Savitzky-Golay and a 2.5 g limiter), inverse-probability weighting and a Heckman-type control function for selection into the NFL, and a cross-validated expected-pressure context model (POE OR 1.22); a Beta-Binomial shrinkage check is supportive (likelihood-ratio p = 0.003) but its player bootstrap interval (0.93 to 1.34) includes 1. Of 22 robustness checks, only team fixed effects, sacks and the 2024 season alone have intervals touching 1.0. **Out of class, the effect does not hold:** The stricter test fails. Holding out each draft class, adding speed does not improve held-out prediction (log-loss gain -0.48 x 10^-3, 95% CI -1.26 to +0.40; player Spearman 0.32 without speed, 0.25 with). Per class (Fig. 6) the estimate exceeds 1 (2023 1.27, 2024 1.11, 2025 1.24; interaction p = 0.38), but only 2023 is precise; without 2023, OR 1.09 [0.75, 1.57]. The data cannot separate a common effect from a 2023-only one. Imai-Keele-Tingley mediation puts 20% (9% to 43%) of the effect through a faster get-off. **Edge rushers, offensive linemen and WR/TE show no detectable speed effect**; on the edge, speed reaches the field but is spent on less direct paths. Drill "first-step" numbers have test-retest reliability of 0.36 to 0.54 and do not travel to games.
 
 ## Headline table
 
@@ -19,7 +19,7 @@ At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch 
 | WR / TE | Separation at pass forward (yd) | 102 / 29,670 | -0.011 [-0.071, +0.049] | 0.72 |
 | WR / TE, deep | Separation at pass forward (yd) | 100 / 10,978 | -0.008 [-0.089, +0.073] | 0.85 |
 
-113 tests in total (15 headline, 76 mechanism, 22 robustness); 61 have Benjamini-Hochberg q < 0.05.
+114 tests in total (15 headline, 76 mechanism, 23 robustness); 62 have Benjamini-Hochberg q < 0.05.
 
 ## Data hygiene
 
@@ -35,7 +35,7 @@ At 10 Hz the 40-yard dash is a top-speed test (tracking peak speed vs stopwatch 
 |---|---|
 | ![Fig 1](figures/fig1_forty.png) Fig. 1: Rebuilt 40-yard dash from 10 Hz tracking | ![Fig 2](figures/fig2_reliability.png) Fig. 2: Reliability of Combine metrics (40 vs drill) |
 | ![Fig 3](figures/fig3_translation.png) Fig. 3: Does Combine speed translate to in-game speed? | ![Fig 4](figures/fig4_dose.png) Fig. 4: Pressure rate vs Combine top speed (interior DL vs edge) |
-| ![Fig 5](figures/fig5_robust.png) Fig. 5: Robustness checks (sensor, selection, xP, seasons) | ![Fig 6](figures/fig6_scouting.png) Fig. 6: Scouting view, interior DL vs expectation |
+| ![Fig 5](figures/fig5_robust.png) Fig. 5: Robustness checks (sensor, selection, xP, seasons) | ![Fig 6](figures/fig6_scouting.png) Fig. 6: Interior effect by draft class |
 | ![Fig 7](figures/fig7_forward.png) Fig. 7: Out-of-time check (fit through 2024, test 2025) | |
 
 ## Methods in the notebook

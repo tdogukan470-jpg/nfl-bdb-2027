@@ -435,6 +435,11 @@ try:
     Rb["Sensor-cleaned: Savitzky-Golay filter"] = orci(G(f"pres ~ vs_sg5 + {b}", IL5.dropna(subset=["vs_sg5"])), "vs_sg5")
     Rb["Sensor-cleaned: 2.5 g limiter"] = orci(G(f"pres ~ vs_lp5 + {b}", IL5.dropna(subset=["vs_lp5"])), "vs_lp5")
     Rb["Drop the 2024 Combine class"] = orci(G(f"pres ~ vs + {b}", IL5[IL5.dy != 2024]))
+    _pos = IL5.nfl_id.map(pl.set_index("nfl_id").nfl_position)
+    res["il_positions"] = dict(players=IL5.assign(p=_pos).groupby("p").nfl_id.nunique().to_dict(), snaps=_pos.value_counts().to_dict())
+    _dl = IL5[_pos.isin(["DT", "NT", "DE"]).values]
+    if _dl.nfl_id.nunique() >= 20: Rb["Roster DT, NT or DE only"] = orci(G(f"pres ~ vs + {b}", _dl)); Rb["Roster DT, NT or DE only"]["players"] = int(_dl.nfl_id.nunique())
+    print("interior sample by roster position:", res["il_positions"])
     res["audit"]["edge_sg"] = orci(G(f"pres ~ vs_sg5 + {b}", ED5.dropna(subset=["vs_sg5"])), "vs_sg5")
     res["audit"]["or_2024_only"] = orci(G(f"pres ~ vs + {b}", IL5[IL5.dy == 2024])) if IL5[IL5.dy == 2024].nfl_id.nunique() >= 10 else None
     res["audit"]["n_players_2024_int"] = int(IL5[IL5.dy == 2024].nfl_id.nunique())
@@ -821,7 +826,7 @@ def save(fig, name, right=None):
            "3": "Source: NFL Big Data Bowl 2027 Combine tracking and regular-season game tracking (dropback rushes).",
            "4": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Model: logistic regression; bands from a player-cluster bootstrap.",
            "5": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Models: logistic GEE clustered by rusher unless the row says otherwise.",
-           "6": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Colour: pressures per 100 rushes vs. a draft-slot-and-size expectation.",
+           "6": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Each class fit separately (logistic GEE); bootstrap resamples whole players.",
            "7": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Model: logistic regression fit on 2023-24, scored on 2025."}.get(n, "Source: NFL Big Data Bowl 2027 competition data.")
     fig.text(0.012, 0.012, src, fontsize=9.5, color=MUTED)
     fig.savefig(f"{FIG}/{name}", dpi=200, facecolor=SURF); plt.show()
@@ -861,11 +866,11 @@ headline(ax, "Top speed is measured almost perfectly; early-phase metrics are mo
 # %%
 tr_ = res["translate"]; fig, ax = plt.subplots(1, 2, figsize=(11.5, 4.6), sharey=True)
 ax[0].scatter(pg.vpk, pg.s_10, s=np.clip(pg.n / 6, 14, 90), c=np.where(pg.ipos > 0.5, BLUE, ORANGE), alpha=0.8, lw=0.8, edgecolor=SURF); ax[0].set_xlabel("Combine top speed in the 40 (yd/s)"); ax[0].set_ylabel("In-game speed 1.0 s after the snap (yd/s)")
-r, lo, hi = tr_["r_vpk_s10"]; ax[0].text(0.04, 0.95, f"r = {r:.2f}  (95% CI {lo:.2f} to {hi:.2f})\nn = {tr_['n_game']} linemen", transform=ax[0].transAxes, va="top", fontsize=10.5, fontweight="bold")
-headline(ax[0], "Top-end speed shows up in the rush", "Combine 40 top speed vs. average speed one second into a pass rush")
+r, lo, hi = tr_["r_vpk_s10"]; ax[0].text(0.04, 0.95, f"within interior r = {tr_['within_interior']['r_vpk_s10'][0]:.2f}, within edge r = {tr_['within_edge']['r_vpk_s10'][0]:.2f}\npooled r = {r:.2f} (inflated by the group gap); n = {tr_['n_game']}", transform=ax[0].transAxes, va="top", fontsize=10, fontweight="bold")
+headline(ax[0], "Top-end speed shows up in the rush", "Combine 40 top speed vs. in-game speed 1.0 s into a pass rush; dot size = game rushes")
 ax[1].scatter(dd_.d_s10, dd_.s_10, s=np.clip(dd_.n / 6, 14, 90), c=np.where(dd_.ipos > 0.5, BLUE, ORANGE), alpha=0.8, lw=0.8, edgecolor=SURF); ax[1].set_xlabel("Combine pass-rush drill: speed 1.0 s in (yd/s)")
 r, lo, hi = tr_["r_drill_s10"]; ax[1].text(0.04, 0.95, f"r = {r:.2f}  (95% CI {lo:.2f} to {hi:.2f})\nn = {tr_['n_drill']} linemen", transform=ax[1].transAxes, va="top", fontsize=10.5, fontweight="bold")
-headline(ax[1], "The drill's first step does not", "Same in-game outcome, measured in the Combine pass-rush drill")
+headline(ax[1], "The drill's speed 1.0 s in does not", "Same in-game outcome vs. the Combine pass-rush drill's speed 1.0 s in")
 ax[1].legend(handles=[Line2D([0], [0], marker="o", ls="", color=BLUE, label="Interior DL"), Line2D([0], [0], marker="o", ls="", color=ORANGE, label="Edge")], loc="lower right"); fig.tight_layout(); save(fig, "fig3_translation.png")
 
 # %% [markdown]
@@ -878,7 +883,8 @@ for a, lab, col in [(ax[0], "INT", BLUE), (ax[1], "EDGE", ORANGE)]:
     a.plot(d["speeds"], np.full(len(d["speeds"]), 0.35), "|", color=MUTED, ms=9, alpha=0.7); a.set_xlabel("Combine top speed (yd/s)  [stopwatch 40 equivalent]")
     tk = np.array([9.0, 9.5, 10.0, 10.5, 11.0]); tk = tk[(tk >= g_.min() - 0.01) & (tk <= g_.max() + 0.01)]; a.set_xticks(tk); a.set_xticklabels([f"{t:.1f}\n[{np.polyval(co, t):.2f}s]" for t in tk]); a.set_ylim(0, 16)
 ax[0].set_ylabel("Adjusted pressure rate per rush snap (%)"); nn = res["n"]; pq = res["p10_p90"]
-headline(ax[0], "Interior DL: faster is better", f"{nn['int_players']} players, {nn['int_snaps']:,} rushes"); headline(ax[1], "Edge rushers: no detectable speed signal", f"{nn['edge_players']} players, {nn['edge_snaps']:,} rushes; OR {res['table1']['edge_pressure']['OR']:.2f}, p = {res['table1']['edge_pressure']['p']:.2f}")
+headline(ax[0], "Interior DL: faster is better", f"{nn['int_players']} players, {nn['int_snaps']:,} rushes"); headline(ax[1], "Edge rushers: weak, uncertain speed signal", f"{nn['edge_players']} players, {nn['edge_snaps']:,} rushes; OR {res['table1']['edge_pressure']['OR']:.2f}, p = {res['table1']['edge_pressure']['p']:.2f}")
+[ax[0].axvline(v_, color=MUTED, lw=1, ls=":") for v_ in (pq["v10"], pq["v90"])]; ax[0].text(pq["v10"], 15.2, "10th pct", ha="center", fontsize=8.5, color=INK2); ax[0].text(pq["v90"], 15.2, "90th pct", ha="center", fontsize=8.5, color=INK2)
 ax[0].annotate(f"{pq['rate10']*100:.1f}%", (pq["v10"], pq["rate10"] * 100), xytext=(-4, -22), textcoords="offset points", color=BLUE, fontweight="bold", ha="center")
 ax[0].annotate(f"{pq['rate90']*100:.1f}%", (pq["v90"], pq["rate90"] * 100), xytext=(0, 12), textcoords="offset points", color=BLUE, fontweight="bold", ha="center")
 fig.text(0.012, 0.03, "Adjusted for weight, arm length, draft slot, draft class, down and distance; band = 95% player-cluster bootstrap CI. Ticks along the bottom: individual players.", fontsize=8.5, color=INK2); fig.tight_layout(); save(fig, "fig4_dose.png")
@@ -891,19 +897,29 @@ rb = res["robust"]; rows_ = list(rb.items()); nloo = res["loo_OR_range"]; fig, a
 for yy, (k, v) in zip(y[:-1], rows_):
     ax.hlines(yy, v["lo"], v["hi"], color=BLUE, lw=2.2); ax.plot(v["OR"], yy, "o", color=BLUE, ms=7.5, mec=SURF, mew=1.4); ax.text(XR + 0.03, yy, f"{v['OR']:.2f}  [{v['lo']:.2f}, {v['hi']:.2f}]", va="center", fontsize=9, color=INK2)
 ax.hlines(y[-1], nloo[0], nloo[1], color=BLUE, lw=5, alpha=0.5); ax.text(XR + 0.03, y[-1], f"range {nloo[0]:.2f} to {nloo[1]:.2f}", va="center", fontsize=9, color=INK2)
+pbx = res.get("pooled_boot")
+if pbx: ax.set_ylim(-0.7, y[0] + 1.5); ax.hlines(y[0] + 0.9, pbx["OR_lo"], pbx["OR_hi"], color=ORANGE, lw=2.2); ax.plot(rb[rows_[0][0]]["OR"], y[0] + 0.9, "o", color=ORANGE, ms=7.5, mec=SURF, mew=1.4); ax.text(XR + 0.03, y[0] + 0.9, f"[{pbx['OR_lo']:.2f}, {pbx['OR_hi']:.2f}]  baseline, player bootstrap", va="center", fontsize=9, color=ORANGE)
 ax.set_yticks(y); ax.set_yticklabels([k for k, _ in rows_] + ["Drop any single player (all refits)"], fontsize=9.5); ax.axvline(1, color=INK2, lw=1.2, ls="--"); ax.set_xlim(0.9, XR); ax.set_xlabel("Odds ratio of generating pressure per +0.5 yd/s top speed (stopwatch row: per 0.2 s faster)"); ax.grid(axis="y", visible=False)
-headline(ax, "The interior DL speed effect holds across every specification", f"Odds ratio with 95% CI; 1.0 = no effect. Point estimates {min(v['OR'] for v in rb.values()):.2f} to {max(v['OR'] for v in rb.values()):.2f}; {sum(v['lo'] <= 1 for v in rb.values())} of {len(rb)} intervals touch 1.0"); fig.tight_layout(); save(fig, "fig5_robust.png", right=0.74)
+headline(ax, "Stable point estimates, but the uncertainty is wider than these bars", f"Clustered-SE 95% CIs (blue); orange = baseline with whole players resampled. Point estimates {min(v['OR'] for v in rb.values()):.2f} to {max(v['OR'] for v in rb.values()):.2f}; {sum(v['lo'] <= 1 for v in rb.values())} of {len(rb)} intervals touch 1.0"); fig.tight_layout(); save(fig, "fig5_robust.png", right=0.74)
 
 # %% [markdown]
-# **Figure 6.** Interior linemen who are fast for their size and produce more than their draft slot and size predict.
+# **Figure 6.** The interior effect class by class.
 
 # %%
-fig, ax = plt.subplots(figsize=(9.4, 6.0)); lim = np.percentile(np.abs(S["diff"]), 95); cmap = mc.LinearSegmentedColormap.from_list("div", ["#e34948", "#f0efec", "#2a78d6"])
-sc = ax.scatter(S.w, S.vpk, s=np.clip(S.n / 4, 25, 260), c=S["diff"], cmap=cmap, vmin=-lim, vmax=lim, edgecolor=INK2, linewidth=0.7, alpha=0.95)
-cb = fig.colorbar(sc, ax=ax, shrink=0.8, pad=0.02); cb.set_label("Pressures per 100 rushes vs. draft-and-size expectation"); cb.outline.set_visible(False)
-for _, r_ in pd.concat([S.nlargest(5, "diff"), S.nsmallest(4, "diff")]).drop_duplicates("nfl_id").iterrows(): ax.annotate(r_.display_name.split(" ")[-1], (r_.w, r_.vpk), xytext=(6, 5), textcoords="offset points", fontsize=8.5, color=INK)
-ax.set_xlabel("Combine weight (lb)"); ax.set_ylabel("Combine top speed (yd/s)"); headline(ax, "Fast for their size: who beats expectation?", f"Interior DL with 100+ rush snaps (n={len(S)}); dot size = rushes. Draft slot, weight and arm length already accounted for.")
-fig.tight_layout(); save(fig, "fig6_scouting.png")
+wcf = res["within_class"]; t1 = res["table1"]["int_pressure"]; pbx = res.get("pooled_boot") or {}
+rows6 = [("All classes pooled", t1["OR"], t1["lo"], t1["hi"], pbx.get("OR_lo"), pbx.get("OR_hi"), f"{res['n']['int_players']} players")]
+for c_ in sorted(k for k in wcf if k.isdigit()): rows6.append((f"{c_} class only", wcf[c_]["OR"], wcf[c_]["lo"], wcf[c_]["hi"], wcf[c_]["boot_ci"][0], wcf[c_]["boot_ci"][1], f"{wcf[c_]['players']} players"))
+if "int_excl2023_fe" in wcf: x_ = wcf["int_excl2023_fe"]; rows6.append(("2024 + 2025 classes", x_["OR"], x_["lo"], x_["hi"], None, None, f"{x_['players']} players"))
+fig, ax = plt.subplots(figsize=(10.5, 4.9)); yy6 = np.arange(len(rows6))[::-1]
+for yv, (lab, o_, l_, h_, bl, bh, nn_) in zip(yy6, rows6):
+    if bl is not None: ax.hlines(yv - 0.18, bl, bh, color=ORANGE, lw=2.2)
+    ax.hlines(yv + 0.12, l_, h_, color=BLUE, lw=2.6); ax.plot(o_, yv + 0.12, "o", color=BLUE, ms=8, mec=SURF, mew=1.4)
+    ax.text(4.35, yv, f"OR {o_:.2f}  ({nn_})", va="center", fontsize=9.5, color=INK2)
+ax.set_xscale("log"); ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter()); ax.set_xticks([0.5, 0.75, 1, 1.5, 2, 3, 4]); ax.set_xticklabels(["0.5", "0.75", "1", "1.5", "2", "3", "4"]); ax.set_xlim(0.25, 4.3)
+ax.axvline(1, color=INK2, lw=1.2, ls="--"); ax.set_yticks(yy6); ax.set_yticklabels([r_[0] for r_ in rows6], fontsize=10); ax.grid(axis="y", visible=False); ax.set_xlabel("Odds ratio of pressure per +0.5 yd/s top speed (log scale)")
+ax.legend(handles=[Line2D([0], [0], color=BLUE, lw=2.6, label="clustered-SE 95% CI"), Line2D([0], [0], color=ORANGE, lw=2.2, label="player-bootstrap 95% CI")], loc="lower left", fontsize=9)
+headline(ax, "Every class leans positive; only 2023 is precise", f"Interior DL. Class-by-speed interaction p = {wcf['interaction_wald_p']:.2f}: the data cannot tell a common effect from a 2023-only one.")
+fig.tight_layout(); save(fig, "fig6_scouting.png", right=0.80)
 
 # %% [markdown]
 # **Figure 7.** Out-of-time check: fit on 2023 and 2024, predict 2025.
@@ -912,7 +928,7 @@ fig.tight_layout(); save(fig, "fig6_scouting.png")
 fw = res["forward"]; fig, ax = plt.subplots(1, 2, figsize=(11, 4.9), sharex=True, sharey=True); mx = max(Pt.y.max(), Pt["draft+size"].max(), Pt["draft+size+speed"].max()) * 100 + 1
 for a, k, ttl in [(ax[0], "draft+size", "Draft slot + size only"), (ax[1], "draft+size+speed", "Adding Combine top speed")]:
     a.plot([0, mx], [0, mx], color=MUTED, lw=1.2, ls="--"); a.scatter(Pt[k] * 100, Pt.y * 100, s=np.clip(Pt.n / 3, 25, 150), color=BLUE, alpha=0.8, edgecolor=SURF, lw=0.8)
-    a.set_xlabel("Predicted 2025 pressure rate (%)"); a.set_xlim(0, mx); a.set_ylim(0, mx); a.text(0.04, 0.95, f"Spearman = {fw['rho_' + k]:.2f}", transform=a.transAxes, va="top", fontsize=11, fontweight="bold")
+    a.set_xlabel("Predicted 2025 pressure rate (%)"); mn_ = max(0, min(Pt.y.min(), Pt["draft+size"].min(), Pt["draft+size+speed"].min()) * 100 - 1); a.set_xlim(mn_, mx); a.set_ylim(mn_, mx); a.text(0.04, 0.95, f"Spearman = {fw['rho_' + k]:.2f}", transform=a.transAxes, va="top", fontsize=11, fontweight="bold")
     headline(a, ttl, "Model fit on 2023-24 seasons only" if k == "draft+size" else "Same, plus top speed")
 ax[0].set_ylabel("Actual 2025 pressure rate (%)")
 fig.text(0.012, 0.03, f"{fw['eval_players']} interior DL with 75+ rushes in 2025. Log-loss improves in {fw['dll_pos_share']*100:.0f}% of player-level bootstrap draws; the 95% interval still includes zero.", fontsize=8.5, color=INK2); fig.tight_layout(); save(fig, "fig7_forward.png")
