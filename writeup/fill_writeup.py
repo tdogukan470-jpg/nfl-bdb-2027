@@ -85,11 +85,14 @@ if xp.get("model", "gbm") == "league rate":
 else:
     mname = {"gbm": "gradient-boosted model", "logit": "logistic regression"}[xp["model"]]
     g = xp['logloss_gain_pct']; gtxt = f"log loss improves {g:.1f}% over the league rate" if g >= 0.05 else "log loss only matches the league rate"
-    tok["XP_SENTENCE"] = (f"The {mname} wins narrowly. Out of fold, AUC is {xp['auc_player_cv']:.2f}, {gtxt} and the worst decile miscalibration is {xp['calib_max_gap'] * 100:.1f} points: "
-                          "on true dropbacks, pre-snap context predicts which snaps produce pressure only weakly, so POE stays close to the raw rate.")
+    tok["XP_SENTENCE"] = (f"Out of fold (folds grouped by rusher) a {'ridge logistic regression' if xp['model'] == 'logit' else 'regularized LightGBM [10]'} narrowly beat {'a regularized LightGBM [10]' if xp['model'] == 'logit' else 'a ridge logistic regression'}, but context predicts pressure only weakly (AUC {xp['auc_player_cv']:.2f}; {gtxt}), so POE stays close to the raw rate.")
 _ip = res.get("il_positions")
 if _ip:
     _dl = {"DT", "NT", "DE"}; tok["IL_NONDL"] = str(sum(v for k, v in _ip["players"].items() if k not in _dl)); tok["IL_NONDL_PCT"] = f"{100 * sum(v for k, v in _ip['snaps'].items() if k not in _dl) / sum(_ip['snaps'].values()):.0f}"
+_cg = (res.get("continuous_by_class") or {}).get("player_get_off")
+if _cg:
+    _a = _cg["all"]; tok["GETOFF_MS"] = f"{-_a['b'] * _a['raw_sd'] * 1000:.0f}"; tok["GETOFF_SD"] = f"{-_a['b']:.2f}"; tok["GETOFF_BOOT"] = f"{-_a['boot_hi']:.2f} to {-_a['boot_lo']:.2f}"
+    assert all(v["b"] < 0 for k, v in _cg.items()), "get-off sign claim no longer holds"
 pb_ = res.get("pooled_boot"); tok["BOOTCI"] = (f"; resampling whole players, {pb_['OR_lo']:.2f} to {pb_['OR_hi']:.2f}" if pb_ else "")
 tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]

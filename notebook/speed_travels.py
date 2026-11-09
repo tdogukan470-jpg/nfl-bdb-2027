@@ -795,6 +795,27 @@ try:
         except Exception: pass
     res["pooled_boot"] = dict(OR_lo=float(np.exp(np.percentile(bp_, 2.5))), OR_hi=float(np.exp(np.percentile(bp_, 97.5))), n=len(bp_), share_pos=float(np.mean(np.array(bp_) > 0)))
     print("pooled player bootstrap:", res["pooled_boot"])
+    try:
+        # Pre-specified continuous outcomes (E21): per-snap get-off time (primary) and 1-s displacement (secondary).
+        # Each snap carries far more information than a binary pressure flag, so class-by-class estimates can be precise.
+        cbc = {}; rng_c = np.random.default_rng(31)
+        ILm = IL.merge(sp[["game_id", "play_id", "nfl_id", "disp_10"]], on=["game_id", "play_id", "nfl_id"], how="left")
+        for m_ in ["player_get_off", "disp_10"]:
+            Dm = ILm.dropna(subset=[m_]).copy(); Dm["mz"] = (Dm[m_] - Dm[m_].mean()) / Dm[m_].std(); out_ = {}
+            for cls in ["all"] + [str(int(c)) for c in sorted(Dm.dy.unique())]:
+                Dc = Dm if cls == "all" else Dm[Dm.dy == int(cls)]; fml = f"mz ~ vs + {b}" if cls == "all" else f"mz ~ vs + {b_noclass}"
+                fo = smf.ols(fml, Dc).fit(cov_type="cluster", cov_kwds={"groups": Dc["nfl_id"]})
+                ids = Dc.nfl_id.unique(); gi = {i: np.where(Dc.nfl_id.values == i)[0] for i in ids}; bs = []
+                for _ in range(100 if FAST else 500):
+                    Db = Dc.iloc[np.concatenate([gi[i] for i in rng_c.choice(ids, len(ids))])]
+                    try: bs.append(float(smf.ols(fml, Db).fit().params["vs"]))
+                    except Exception: pass
+                out_[cls] = dict(b=float(fo.params["vs"]), lo=float(fo.conf_int().loc["vs", 0]), hi=float(fo.conf_int().loc["vs", 1]), p=float(fo.pvalues["vs"]),
+                                 boot_lo=float(np.percentile(bs, 2.5)), boot_hi=float(np.percentile(bs, 97.5)), players=int(Dc.nfl_id.nunique()), snaps=int(len(Dc)),
+                                 raw_sd=float(Dm[m_].std()))
+            cbc[m_] = out_
+        res["continuous_by_class"] = cbc; print("continuous outcomes by class:", json.dumps(cbc, indent=1, default=float))
+    except Exception as e_c: fail("continuous_by_class", e_c)
     res["within_class"] = wc_; print(json.dumps(wc_, indent=1, default=float))
 except Exception as e: fail("5.8_loco", e)
 

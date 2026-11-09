@@ -13,3 +13,10 @@
 - Table 2 actions softened to what the intervals support; "best Combine filter" claim removed (no comparison was run); "Wide-9" claim relabelled as exploratory; weekly use labelled "proposed, not tested".
 - Beta-Binomial: LR p 0.003 vs player-bootstrap CI 0.93-1.34 now reported together as "supportive, not decisive".
 - Unverified 2025-export claim now attributed and marked "not verified by us".
+
+## 2026-11-09 E21 pre-registration (written before the run)
+Hypothesis: Combine top speed shortens per-snap get-off for interior rushers in every draft class, not just 2023.
+Primary outcome: player_get_off (standardized), OLS with player-clustered SE + 500 player-bootstrap draws, per class without class FE, pooled with class FE.
+Secondary: disp_10 (displacement in first 1 s).
+Falsified if: the 2024 or 2025 class bootstrap interval for get-off includes 0, or the sign flips.
+If supported: writeup states that speed reaches the field (get-off) in every class even though pressure itself is precise only in 2023.

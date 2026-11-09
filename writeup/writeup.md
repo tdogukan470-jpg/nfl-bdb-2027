@@ -2,6 +2,8 @@
 
 **Track:** Open. The attached public notebook rebuilds every number and figure from the raw competition files; code, figures and results are mirrored at github.com/tdogukan470-jpg/nfl-bdb-2027.
 
+**Bottom line for a front office.** (1) The 40's top speed is the one Combine movement number that reaches the field: it repeats almost perfectly and shows up in game speed, while drill first-step numbers are noise. (2) Faster interior linemen get off the ball sooner (robust to resampling whole players) and generate more pressure (6.3% to 11.4% from the 10th to 90th speed percentile); the pressure gain is precise only in the 2023 class, so use it as a tiebreaker, not a rule. (3) For edge rushers, offensive linemen and receivers the 40 adds nothing detectable beyond size and draft slot.
+
 ## 1. The question
 
 We ask which Combine movement traits carry over to regular-season NFL performance and where they do not; for a scout the boundaries matter as much as the finding.
@@ -20,7 +22,7 @@ From each 10 Hz 40-yard trace we rebuilt start of motion, peak speed over 30 yd,
 ![Fig. 2: Reliability of Combine metrics (40 vs drill)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig2_reliability.png)
 *Figure 2. Test-retest reliability from repeat attempts (375 players with two 40s, 106 with two drill reps). Top speed repeats; first-step metrics do not.*
 
-**Sensor audit.** Quantization artifacts would appear as implausible accelerations above 3.5 g. Across all 793 forty-yard attempts (2023 to 2025) no frame in the 40-yard window exceeds 3.5 g (median peak 0.5 g). Rebuilding top speed with a Savitzky-Golay derivative filter [9] or a 2.5 g limiter leaves the feature (r = 0.999) and the interior result (OR 1.23 and 1.22) unchanged. Public notebooks report that the 2025 export is stored at full precision while 2023-24 sit on a 1/60-yd grid [11]; we did not verify this ourselves, so every model carries draft-class fixed effects; the full-precision 2025 class and the grid-era 2023 class give similar point estimates (1.24 and 1.27; Section 9).
+**Sensor audit.** No frame in any of the 793 forty-yard attempts (2023 to 2025) exceeds 3.5 g (median peak 0.5 g), so quantization spikes do not drive the feature; rebuilding top speed with a Savitzky-Golay filter [9] or a 2.5 g limiter leaves it (r = 0.999) and the interior result (OR 1.23 and 1.22) unchanged. Public notebooks report that the 2025 export is stored at full precision while 2023-24 sit on a 1/60-yd grid [11]; we did not verify this ourselves, so every model carries draft-class fixed effects; the full-precision 2025 class and the grid-era 2023 class give similar point estimates (1.24 and 1.27; Section 9).
 
 **Data hygiene.** We drop preseason and playoff games (21% of player-play rows) and keep regular-season dropbacks; including every game gives OR 1.23.
 
@@ -61,11 +63,11 @@ For 75 interior DL and 9,378 rushes, each +0.5 yd/s raises the odds of pressure 
 
 ## 6. Selection bias: we only see players who reached the field
 
-Of 510 prospects, 79% appear in game tracking but only 105 distinct players (21%; the interior and edge samples overlap) rush the passer and 48 (9%) rush 100+ times. We modeled each prospect's chance of being observed (cross-fitted, AUC 0.96 and 0.97; selection is close to deterministic, so the weights lean on few players) and reweighted by its stabilized inverse; a Heckman-type control function [7] adds the inverse Mills ratio, with draft class, dropped from that outcome model, as the excluded variable. For any rush and for 100+ rushes: IPW OR 1.17 (CI 1.04 to 1.33) and 1.17 (1.04 to 1.33); control function OR 1.22 and 1.19 (Mills ratio p = 0.16 and 0.63).
+Of 510 prospects, 79% appear in game tracking, but only 105 distinct players (21%) rush the passer and 48 (9%) rush 100+ times. Reweighting by each prospect's modeled chance of being observed (stabilized inverse-probability weights; AUC 0.96, so selection is nearly deterministic and the weights lean on few players) gives OR 1.17 (1.04 to 1.33); 100+ rushes gives the same. A Heckman-type control function [7], with draft class as the excluded variable (dropped from that outcome model), gives 1.22 and 1.19 (Mills ratio p = 0.16 and 0.63).
 
 ## 7. Context model: Pressure Over Expected
 
-We built an expected-pressure (xP) model on 19,826 dropback rushes from game situation, formation and the distance to the nearest tracked opposing lineman (a double-team proxy, known on 69% of snaps). A ridge logistic regression and a regularized LightGBM [10] compete out of fold (folds grouped by rusher) and score almost identically. The logistic regression wins narrowly. Out of fold, AUC is 0.58, log loss improves 1.1% over the league rate and the worst decile miscalibration is 0.9 points: on true dropbacks, pre-snap context predicts which snaps produce pressure only weakly, so POE stays close to the raw rate.
+We built an expected-pressure (xP) model on 19,826 dropback rushes from game situation, formation and the distance to the nearest tracked opposing lineman (a double-team proxy). Out of fold (folds grouped by rusher) a ridge logistic regression narrowly beat a regularized LightGBM [10], but context predicts pressure only weakly (AUC 0.58; log loss improves 1.1% over the league rate), so POE stays close to the raw rate.
 
 Pressure Over Expected (POE) is pressure minus xP. With xP as an offset, interior speed gives OR 1.22 (1.12 to 1.33): +0.5 yd/s adds 1.4 points of POE per 100 rushes (0.8 to 2.0). Edge: OR 1.05 (0.94 to 1.18).
 
@@ -76,7 +78,7 @@ Pressure Over Expected (POE) is pressure minus xP. With xP as an offset, interio
 
 Imai-Keele-Tingley mediation [5] (1,000 draws), in pressure points per 100 rushes per +0.5 yd/s.
 
-**Interior.** Speed shortens get-off (snap to first movement), and get-off drives pressure: the indirect effect (ACME) is +0.29 [0.15, 0.45] (p = 0.001) against a total effect of +1.46 [0.81, 2.13], so **20% (9% to 43%) runs through get-off**. Speed at 1 s, path directness, depth and width show no detectable indirect effect.
+**Interior.** Speed shortens get-off (snap to first movement) by 0.14 SD per +0.5 yd/s (whole-player bootstrap 0.08 to 0.21; shorter in all three classes, each imprecise alone), and get-off drives pressure: the indirect effect (ACME) is +0.29 [0.15, 0.45] (p = 0.001) against a total effect of +1.46 [0.81, 2.13], so **20% (9% to 43%) runs through get-off**. Speed at 1 s, path directness, depth and width show no detectable indirect effect.
 
 **Edge: suppression.** Faster edge rushers do run faster in-game (ACME through speed at 1 s +0.69 [0.32, 1.08]), but they take less direct paths: path efficiency carries an ACME of -0.41 [-0.86, -0.13] against a direct effect of +1.22 [0.14, 2.40], total +0.79 [-0.40, 1.98]. Speed helps, the route spends it, and the edge total looks null. These assume no unmeasured factor drives both mediator and outcome.
 
@@ -113,14 +115,14 @@ Edge cells use the drill's path efficiency, which does not predict pressure on i
 ## 11. Limitations
 
 - Observational data: no causal claim beyond the mediation assumptions above.
-- 75 interior and 95 edge players; the decision-matrix cells are small. Treat them as direction, not rules.
-- Only the 2023 class estimates the interior effect precisely (its player bootstrap, 0.98 to 1.60, touches 1); for a new class the effect is a hypothesis to monitor, not a rule.
+- 75 interior and 95 edge players; decision-matrix cells are small.
+- Only the 2023 class estimates the pressure effect precisely.
 - The sensor audit covers the 40-yard window only; no quarterback tracking, time to throw or line-up depth, so double-team and alignment are proxies.
 - Edge and OL nulls mean no detectable linear speed effect, not zero.
 
 ## 12. Takeaway
 
-At 10 Hz the 40 is a top-speed test. In 2023-25 data, interior linemen who are fast for their size and draft slot generate about 1.8x the pressure rate of slow ones, about 20% of it through a faster first move. That signal is precise only in the 2023 class and has not held up out of class, so it should guide where scouts look, not replace the tape. On the edge, speed is real but the path spends it; read edge rushers off the tape.
+At 10 Hz the 40 is a top-speed test, and its clearest game footprint is a faster interior get-off. The pressure gain that follows (about 1.8x from slow to fast) is not yet proven out of class, so it should guide where scouts look, not replace the tape. On the edge, speed is real but the path spends it.
 
 ## Appendix: references
 
