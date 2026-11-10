@@ -150,14 +150,14 @@ if lc:
         # which held-out class leaves a null fit on the others?
         nulls = [(c_, v_["train_or"]) for c_, v_ in lc["by_class"].items() if v_["train_or"]["lo"] <= 1.0]
         others = lambda c_: " and ".join(sorted(k for k in lc["by_class"] if k != c_))
-        s_ = (f"The stricter test fails. Holding out each draft class, adding speed does not improve held-out prediction "
-              f"(log-loss gain {lc['dll'] * 1000:+.2f} x 10^-3, 95% CI {lo_ * 1000:+.2f} to {hi_ * 1000:+.2f}; player Spearman {lc['rho0']:.2f} without speed, {lc['rho1']:.2f} with).")
+        s_ = (f"The harder test fails: hiding one whole draft class at a time, adding speed does not improve predictions for the hidden class "
+              f"(log-loss gain {lc['dll'] * 1000:+.2f} x 10^-3, 95% CI {lo_ * 1000:+.2f} to {hi_ * 1000:+.2f}; rank correlation {lc['rho0']:.2f} without speed, {lc['rho1']:.2f} with).")
         wc = res.get("within_class")
         if wc and nulls:
             c_ = nulls[0][0]; cls_ = sorted(k for k in wc if k.isdigit()); ex_ = wc.get(f"int_excl{c_}_fe")
             prec = [k for k in cls_ if wc[k]["lo"] > 1.0]
             s_ += (" Per class (Fig. 6) the estimate " + ("exceeds 1" if all(wc[k]["OR"] > 1 for k in cls_) else "mixed") + " ("
-                   + ", ".join(f"{k} {wc[k]['OR']:.2f}" for k in cls_) + f"; interaction p = {wc['interaction_wald_p']:.2f}), but only "
+                   + ", ".join(f"{k} {wc[k]['OR']:.2f}" for k in cls_) + f"; class difference p = {wc['interaction_wald_p']:.2f}), but only "
                    + " and ".join(prec) + " is precise" + (f"; without {c_}, OR {ex_['OR']:.2f} [{ex_['lo']:.2f}, {ex_['hi']:.2f}]" if ex_ else "")
                    + f". The data cannot separate a common effect from a {c_}-only one.")
             bc_ = wc[c_].get("boot_ci")
