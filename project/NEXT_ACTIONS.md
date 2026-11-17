@@ -13,3 +13,4 @@
 10. NEXT: optional third blind read; otherwise only forum monitoring until 2027-01-06. Single biggest remaining lever per reviewer: restructure around the get-off finding (large rewrite, not started).
 11. DONE 2026-11-18: v28 restructure live on Kaggle (body 9eba23a, subtitle 139/140 chars, gallery 4-7 replaced, 7 inline + 7 gallery verified). Third blind read running.
 12. DONE 2026-11-18: v29 live on Kaggle (body 7356646, gallery 3-7 replaced; 7 inline + 7 gallery verified). E23 falsified and reported. Remaining ideas from third read (not done): cut Fig 6 to ~6 rows; shrink Table 2 to ~4 rows; DT/NT/DE-only as headline sample. Stop condition reached for analysis: no new data source; further work is presentation only.
+13. DONE 2026-11-18: v30 live (Fig 6 13 key rows, Table 2 edge rows merged); 7 inline + 7 gallery verified.
