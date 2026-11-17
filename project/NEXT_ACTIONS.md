@@ -11,3 +11,4 @@
 8. DONE 2026-11-09: Kaggle body from a9fb7c9 + gallery figs 3-7 replaced (v24) and verified live. Card thumbnail still the old Fig 4 (cosmetic).
 9. DONE 2026-11-17: Kaggle body from 475b1ba, new subtitle, gallery figs 2-7 replaced (v27, Fig 7 retitled new-season) and verified live via Browser 1 (Browser 2 is not signed in to Kaggle).
 10. NEXT: optional third blind read; otherwise only forum monitoring until 2027-01-06. Single biggest remaining lever per reviewer: restructure around the get-off finding (large rewrite, not started).
+11. DONE 2026-11-18: v28 restructure live on Kaggle (body 9eba23a, subtitle 139/140 chars, gallery 4-7 replaced, 7 inline + 7 gallery verified). Third blind read running.
