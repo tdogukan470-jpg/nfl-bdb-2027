@@ -20,3 +20,9 @@ Primary outcome: player_get_off (standardized), OLS with player-clustered SE + 5
 Secondary: disp_10 (displacement in first 1 s).
 Falsified if: the 2024 or 2025 class bootstrap interval for get-off includes 0, or the sign flips.
 If supported: writeup states that speed reaches the field (get-off) in every class even though pressure itself is precise only in 2023.
+
+## 2026-11-18 E23 pre-registration (written before the run)
+Hypothesis: Combine top speed predicts per-snap get-off for interior rushers in a draft class the model never saw.
+Design: leave-one-class-out; OLS get-off ~ controls (no class FE) with and without speed, fit on two classes, scored on the held-out class; outcome = mean held-out squared-error reduction from adding speed, pooled over the three folds; 95% interval from 1,000 whole-player bootstrap draws over held-out players.
+Falsified if: that interval includes 0 or is negative.
+Also: share of interior dropback rushes with missing get-off and whether speed predicts missingness (survivorship check); pressure p10-p90 ratio interval recomputed from the same 1,000-draw player bootstrap as the OR.

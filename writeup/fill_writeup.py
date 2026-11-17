@@ -2,6 +2,7 @@
 Usage: python3 fill_writeup.py results.json template.md out.md
 """
 import json, re, sys, math
+import pandas as pd
 import numpy as np
 from pathlib import Path
 
@@ -104,6 +105,19 @@ else:
     tok["PAIR_SENTENCE"] = ""
 _corr_keys = [k for k in res["robust"] if k.startswith(("IPW", "Heckman", "Sensor-cleaned", "Context-adjusted"))]
 tok["CORR_RANGE"] = f"{min(res['robust'][k]['OR'] for k in _corr_keys):.2f} and {max(res['robust'][k]['OR'] for k in _corr_keys):.2f}"
+_pbx = res.get("pooled_boot") or {}
+tok["RATIO_BOOT"] = f"{_pbx['ratio_lo']:.2f} to {_pbx['ratio_hi']:.2f}" if "ratio_lo" in _pbx else f"{res['p10_p90']['ratio_lo']:.2f} to {res['p10_p90']['ratio_hi']:.2f}"
+_gl = res.get("getoff_loco"); _gp = pd.DataFrame(res.get("getoff_players") or [])
+if _gl and _cg:
+    _ms = -_cg["all"]["b"] * _cg["all"]["raw_sd"] * 1000; tok["GETOFF_BSD"] = f"{_gl['between_player_sd_s']:.3f}"; tok["GETOFF_SHARE"] = f"{100 * _ms / 1000 / _gl['between_player_sd_s']:.0f}"
+    _lo, _hi = _gl["mse_gain_pct_ci"]; _pass = _lo > 0
+    tok["GETOFF_LOCO_SENTENCE"] = ((f"adding speed cuts held-out get-off error by {_gl['mse_gain_pct']:.1f}% (whole-player bootstrap {_lo:.1f}% to {_hi:.1f}%), "
+                                    if _pass else f"adding speed changes held-out get-off prediction error by {-_gl['mse_gain_pct']:+.1f}% (positive = worse; whole-player bootstrap {-_hi:+.1f}% to {-_lo:+.1f}%), ")
+                                   + f"plausibly because snap-to-snap noise swamps a {_ms:.0f} ms shift (a hypothesis we did not test); at the player level the rank correlation between predicted and actual get-off moves from {_gl['player_rho0']:.2f} to {_gl['player_rho1']:.2f} ({_gl['player_n']} held-out players with 50+ rushes; exploratory, no interval).")
+    tok["GETOFF_HOLD"] = "and for draft classes the model never saw" if _pass else "in the pooled data, though adding it does not improve get-off predictions for a held-out draft class"
+    tok["GETOFF_MISS_SENTENCE"] = ""
+else:
+    tok.update(GETOFF_BSD="", GETOFF_SHARE="", GETOFF_LOCO_SENTENCE="", GETOFF_HOLD="", GETOFF_MISS_SENTENCE="")
 pb_ = res.get("pooled_boot"); tok["BOOTCI"] = (f"; resampling whole players, {pb_['OR_lo']:.2f} to {pb_['OR_hi']:.2f}" if pb_ else "")
 tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]
@@ -161,7 +175,7 @@ if lc:
         # which held-out class leaves a null fit on the others?
         nulls = [(c_, v_["train_or"]) for c_, v_ in lc["by_class"].items() if v_["train_or"]["lo"] <= 1.0]
         others = lambda c_: " and ".join(sorted(k for k in lc["by_class"] if k != c_))
-        s_ = (f"The harder test fails: hiding one whole draft class at a time, adding speed does not improve predictions for the hidden class "
+        s_ = (f"adding speed does not improve predictions for the hidden class "
               f"(log-loss gain {lc['dll'] * 1000:+.2f} x 10^-3, 95% CI {lo_ * 1000:+.2f} to {hi_ * 1000:+.2f}; rank correlation {lc['rho0']:.2f} without speed, {lc['rho1']:.2f} with).")
         wc = res.get("within_class")
         if wc and nulls:

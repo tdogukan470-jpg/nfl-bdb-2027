@@ -2,7 +2,7 @@
 
 **Track:** Open. The attached public notebook rebuilds every number and figure from the raw competition files; code, figures and results are mirrored at github.com/tdogukan470-jpg/nfl-bdb-2027.
 
-**Bottom line for a front office.** (1) The 40's top speed is the one Combine movement number that reaches the field: it repeats almost perfectly and shows up in game speed, while drill first-step numbers repeat poorly and track game speed weakly. (2) Faster interior linemen cross the line of scrimmage sooner: about 36 ms per +0.5 yd/s of top speed, a link that holds when whole players are resampled (Fig. 4). (3) They also generate more pressure (6.3% to 11.4% from the 10th to 90th speed percentile), but that gain is borderline once whole players are resampled (0.99 to 1.42) and has not held out of class, so use it as a tiebreaker, not a rule. (4) For edge rushers, offensive linemen and receivers the 40 shows no consistent effect beyond size and draft slot.
+**Bottom line for a front office.** (1) The 40's top speed is the one Combine movement number that reaches the field: it repeats almost perfectly and shows up in game speed, while drill first-step numbers repeat poorly and track game speed weakly. (2) Faster interior linemen cross the line of scrimmage sooner: about 36 ms per +0.5 yd/s of top speed, a link that holds when whole players are resampled in the pooled data, though adding it does not improve get-off predictions for a held-out draft class (Fig. 4). (3) They also generate more pressure (6.3% to 11.4% from the 10th to 90th speed percentile), but that gain is borderline once whole players are resampled (0.99 to 1.42) and has not held out of class, so use it as a tiebreaker, not a rule. (4) For edge rushers, offensive linemen and receivers the 40 shows no consistent effect beyond size and draft slot.
 
 ## 1. The question
 
@@ -22,20 +22,20 @@ From each 10 Hz 40-yard trace we rebuilt start of motion, peak speed over 30 yd,
 ![Fig. 2: Reliability of Combine metrics (40 vs drill)](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig2_reliability.png)
 *Figure 2. Test-retest reliability from repeat attempts (375 players with two 40s, 106 with two drill reps). Top speed repeats; first-step metrics do not.*
 
-## 3. Drill numbers travel weakly (Fig. 3)
+## 3. Drill first-step numbers travel weakly (Fig. 3)
 
-For 59 linemen with both drill traces and game tracking, the 40's top speed tracks game speed one second after the snap within each group (interior r = 0.39, edge r = 0.37; pooled 0.77, inflated by the interior-edge gap). The drill's speed one second in tracks it weakly: r = 0.13 (CI -0.22 to 0.52), or 0.37 (0.17 to 0.57) without one outlier trace, against 0.77 for the 40 on the same pooled basis. Trust the 40's speed trace, not single-attempt first-step numbers.
+For 59 linemen with both drill traces and game tracking, the 40's top speed tracks game speed one second after the snap within each group (interior r = 0.39, edge r = 0.37; pooled 0.77, inflated by the interior-edge gap). The drill's speed one second in tracks it weakly: r = 0.13 (CI -0.22 to 0.52), or 0.37 (0.17 to 0.57) without one outlier trace, against 0.77 for the 40 on the same pooled basis. The drill's peak speed does better (r = 0.47, repeatability 0.64), but that is top speed again. Trust top speed, not single-attempt first-step numbers.
 
 ![Fig. 3: Does Combine speed translate to in-game speed?](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig3_translation.png)
 *Figure 3. Combine measures against in-game speed one second after the snap: the 40's top speed (left) carries over, the pass-rush drill's speed 1.0 s in (right) tracks it more weakly, and its r depends on one outlier. Dot size: game rushes.*
 
 ## 4. Method
 
-From 2023 to 2025 regular-season tracking we computed, per snap, get-off (seconds from the snap until the rusher crosses the line of scrimmage) and pressure for pass rushers, pressure allowed for offensive linemen, and separation at pass-forward for WR/TE adjusted for route and coverage. The Combine feature is mean top speed across a player's 40 attempts, in units of +0.5 yd/s, about 0.2 s on the stopwatch at a lineman's speed. Models are GEE with standard errors clustered by player [8], controlling for weight, arm length, log draft slot, draft class and game situation. Speed and weight correlate at -0.83 among interior linemen, so size is always in the model. Because a few heavy-usage players can make clustered intervals too narrow, every headline estimate is also re-checked by resampling whole players.
+From 2023 to 2025 regular-season tracking we computed, per snap, get-off (seconds from the snap until the rusher crosses the line of scrimmage) and pressure for pass rushers, pressure allowed for offensive linemen, and separation at pass-forward for WR/TE adjusted for route and coverage. The Combine feature is mean top speed across a player's 40 attempts, in units of +0.5 yd/s, about 0.2 s on the stopwatch at a lineman's speed. Models are GEE with standard errors clustered by player [8], controlling for weight, arm length, log draft slot, draft class, down and distance. Speed and weight correlate at -0.83 among interior linemen, so size is always in the model. Because a few heavy-usage players can make clustered intervals too narrow, every headline estimate is also re-checked by resampling whole players.
 
 ## 5. Where speed shows up first: the get-off
 
-For 75 interior linemen and 9,378 dropback rushes, each +0.5 yd/s of Combine top speed shortens get-off by 36 ms (0.14 SD; whole-player bootstrap 20 to 54 ms). The sign is the same in all three draft classes, though each class alone is imprecise (Fig. 4). This is the most direct Combine-to-game link in the data: speed measured in February shows up in the first second of an NFL rush.
+For 75 interior linemen and 9,378 dropback rushes, each +0.5 yd/s of Combine top speed shortens get-off by 36 ms (0.14 SD; whole-player bootstrap 20 to 54 ms), about 47% of the spread in average get-off between interior players (SD 0.077 s among the 27 with 100+ rushes). The sign is the same in all three draft classes, though each class alone is imprecise (Fig. 4). This is the most direct Combine-to-game link in the data: speed measured in February shows up in the first second of an NFL rush.
 
 ![Fig. 4: Faster interior linemen cross the line sooner](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig4_getoff.png)
 *Figure 4. Left: each interior lineman's raw mean get-off against his Combine top speed (players with 50+ rushes; unadjusted, so lighter players' speed advantage is mixed in; circled: the illustrative pair below). Right: the adjusted effect in milliseconds, pooled and by class, with clustered-SE (blue) and whole-player bootstrap (orange) intervals.*
@@ -66,20 +66,20 @@ Each +0.5 yd/s raises the odds of pressure by 22% (odds ratio, OR, 1.22; cluster
 Correcting for who reached the field, for game context and for sensor noise leaves the estimate between 1.17 and 1.23 (Appendix A1 to A3).
 
 ![Fig. 6: Robustness checks with clustered and player-bootstrap intervals](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig6_robust.png)
-*Figure 6. The interior effect under every specification: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
+*Figure 6. The interior pressure effect under the baseline plus 22 alternative specifications: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
 
 **Top speed, not burst.** Top speed carries the effect (OR 1.21) and burst carries none (OR 1.03, p = 0.54); the stopwatch 10-yard split adds nothing once the 40 is in (p = 0.35).
 
 ## 7. Does it hold for a new class?
 
-A scout needs the finding to hold for the next draft. The harder test fails: hiding one whole draft class at a time, adding speed does not improve predictions for the hidden class (log-loss gain -0.48 x 10^-3, 95% CI -1.26 to +0.40; rank correlation 0.32 without speed, 0.25 with). Per class (Fig. 7) the pressure estimate exceeds 1 (2023 1.27, 2024 1.11, 2025 1.24; class difference p = 0.38), but only 2023's clustered interval excludes 1, and its player bootstrap (0.98 to 1.60) touches 1; without 2023, OR 1.09 [0.75, 1.57]. The data cannot separate a common effect from a 2023-only one. A season split (fit through 2024, predict 2025) is mildly positive but its interval also includes zero (Appendix A6).
+A scout needs the finding to hold for the next draft, so we hide one whole draft class at a time, fit on the other two and score the hidden class. **In plain terms: for a class the model had not seen, knowing speed did not measurably improve predictions of either pressure or per-snap get-off.** Pressure: adding speed does not improve predictions for the hidden class (log-loss gain -0.48 x 10^-3, 95% CI -1.26 to +0.40; rank correlation 0.32 without speed, 0.25 with). Per class (Fig. 7) the pressure estimate exceeds 1 (2023 1.27, 2024 1.11, 2025 1.24; class difference p = 0.38), but only 2023's clustered interval excludes 1, and its player bootstrap (0.98 to 1.60) touches 1; without 2023, OR 1.09 [0.75, 1.57]. The data cannot separate a common effect from a 2023-only one. Get-off: adding speed changes held-out get-off prediction error by +0.4% (positive = worse; whole-player bootstrap -1.0% to +1.5%), plausibly because snap-to-snap noise swamps a 36 ms shift (a hypothesis we did not test); at the player level the rank correlation between predicted and actual get-off moves from 0.61 to 0.73 (33 held-out players with 50+ rushes; exploratory, no interval). A season split (fit through 2024, predict 2025) is mildly positive but its interval also includes zero (Appendix A6).
 
 ![Fig. 7: Interior pressure effect by draft class](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig7_byclass.png)
 *Figure 7. Interior pressure effect fit separately by draft class. Blue: clustered-SE intervals; orange: whole-player bootstrap. Every class leans positive; none is precise once whole players are resampled (2023 is the tightest).*
 
 ## 8. How a team uses this
 
-**Table 2. Draft-cycle and deployment decision matrix. POE is percentage points of pressure per 100 rushes above context expectation.**
+**Table 2. Exploratory draft-cycle and deployment matrix (small cells; cut-offs scanned, see note). POE is percentage points of pressure per 100 rushes above context expectation.**
 
 | Prospect profile | Evidence | Action |
 |---|---|---|
@@ -89,11 +89,11 @@ A scout needs the finding to hold for the next draft. The harder test fails: hid
 | Interior up to 294 lb (the lightest band includes linebackers and DBs aligned inside) | Fast-minus-slow POE +2.3 [-4.3, +11.9] (<= 263 lb) and +3.1 [+0.6, +5.3] (264 to 294 lb) | Weigh the split here; the 264 to 294 lb gap excludes 0 |
 | Interior 297+ lb (nose types) | Fast-minus-slow +0.5 [-2.4, +2.4] | No gap; use other traits |
 | Fast edge, efficient drill path (16 players) | POE +1.5 [-1.8, +3.3] | No clear gain from speed; judge on tape |
-| Fast edge, inefficient drill path (18 players) | POE -0.8 [-3.8, +0.5]; wide -1.2, tight -1.7 (exploratory) | Wider alignment did not help |
+| Fast edge, inefficient drill path (18 players) | POE -0.8 [-3.8, +0.5]; wide -1.2, tight -1.7 (exploratory) | Wide and tight alignment differ little |
 | Slow edge, efficient / inefficient path (18 / 15 players) | POE -2.2 [-4.4, -0.4] and -3.0 [-6.2, +0.2] | Below the fast cells; edge speed may help a little (OR CI includes 1) |
 | OL, WR/TE | No detectable speed effect | Do not pay for speed alone |
 
-Edge cells use the drill's path efficiency, which does not predict pressure on its own (interaction p = 0.54), so judge path directness on tape. Weight bands proxy 3-tech versus nose. The split cut-off was chosen from 7 scanned values (2.01 to 2.27 s); only 2.12 s gives a fast-minus-slow gap whose interval excludes 0, so the interior rows are exploratory.
+Edge cells use the drill's path efficiency, which does not predict pressure on its own (main effect p = 0.44; speed x path interaction p = 0.54), so judge path directness on tape. Weight bands proxy 3-tech versus nose. The split cut-off was chosen from 7 scanned values (2.01 to 2.27 s); only 2.12 s gives a fast-minus-slow gap whose interval excludes 0, so the interior rows are exploratory.
 
 **In practice.** (1) Read speed off the 40's top speed (tracking or stopwatch), not the drill's first step. (2) Among interior prospects of similar weight and draft range, expect the faster one to cross the line about 36 ms sooner per 0.5 yd/s; treat any pressure edge as a tiebreaker. (3) *Proposed, not tested here:* get-off is logged on every rush, so a rookie's early-season get-off is a quick check on whether his Combine speed is reaching the field, long before his pressure rate settles.
 
@@ -102,12 +102,13 @@ Edge cells use the drill's path efficiency, which does not predict pressure on i
 - Observational data: no causal claim beyond the mediation assumptions in Appendix A4.
 - 75 interior and 95 edge players; decision-matrix cells are small.
 - No single draft class pins down the pressure effect once whole players are resampled.
+- The rush sample is defined by a recorded get-off, so rushes where a lineman never crossed the line are not in it; we could not test whether speed predicts that.
 - No quarterback tracking, time to throw or line-up depth, so double-team and alignment are proxies.
 - Edge and OL nulls mean no detectable linear speed effect, not zero.
 
 ## 10. Takeaway
 
-At 10 Hz the 40 is a top-speed test, and its clearest game footprint is a quicker interior get-off. The pressure gain that follows (about 1.8x from slow to fast) is not yet proven out of class, so it should guide where scouts look, not replace the tape.
+At 10 Hz the 40 is a top-speed test, and its clearest game footprint is a quicker interior get-off. The pressure gain that follows (about 1.8x from slow to fast, whole-player bootstrap 0.96 to 2.75) is not yet proven out of class, so it should guide where scouts look, not replace the tape.
 
 ## Appendix A: robustness details
 

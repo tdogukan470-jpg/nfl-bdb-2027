@@ -789,12 +789,15 @@ try:
     bb_ = gi_.params[ip_].values; VV_ = gi_.cov_params().loc[ip_, ip_].values; W_ = float(bb_ @ np.linalg.solve(VV_, bb_))
     wc_["interaction_wald_p"] = float(_chi2.sf(W_, len(ip_))); wc_["interaction_df"] = len(ip_)
     # Pooled player-cluster bootstrap of the headline interior OR (same controls as the main model, plain logit per resample)
-    ids_p = IL.nfl_id.unique(); gp_ = {i: np.where(IL.nfl_id.values == i)[0] for i in ids_p}; rng_p = np.random.default_rng(29); bp_ = []
+    ids_p = IL.nfl_id.unique(); gp_ = {i: np.where(IL.nfl_id.values == i)[0] for i in ids_p}; rng_p = np.random.default_rng(29); bp_ = []; rq_ = []
     for _ in range(100 if FAST else 1000):
         Db = IL.iloc[np.concatenate([gp_[i] for i in rng_p.choice(ids_p, len(ids_p))])]
-        try: bp_.append(float(smf.logit(f"pres ~ vs + {b}", data=Db).fit(disp=0).params["vs"]))
+        try:
+            fb_ = smf.logit(f"pres ~ vs + {b}", data=Db).fit(disp=0); bp_.append(float(fb_.params["vs"]))
+            rq_.append(float(fb_.predict(Db.assign(vs=(q90 - 10.0) / 0.5)).mean() / fb_.predict(Db.assign(vs=(q10 - 10.0) / 0.5)).mean()))
         except Exception: pass
-    res["pooled_boot"] = dict(OR_lo=float(np.exp(np.percentile(bp_, 2.5))), OR_hi=float(np.exp(np.percentile(bp_, 97.5))), n=len(bp_), share_pos=float(np.mean(np.array(bp_) > 0)))
+    res["pooled_boot"] = dict(OR_lo=float(np.exp(np.percentile(bp_, 2.5))), OR_hi=float(np.exp(np.percentile(bp_, 97.5))), n=len(bp_), share_pos=float(np.mean(np.array(bp_) > 0)),
+                              ratio_lo=float(np.percentile(rq_, 2.5)), ratio_hi=float(np.percentile(rq_, 97.5)))
     print("pooled player bootstrap:", res["pooled_boot"])
     try:
         # Pre-specified continuous outcomes (E21): per-snap get-off time (primary) and 1-s displacement (secondary).
@@ -833,6 +836,26 @@ try:
             f_, s_ = (best[1], best[2]) if best[1].vpk > best[2].vpk else (best[2], best[1])
             res["getoff_pair"] = {k_: {c_: (v_.item() if hasattr(v_, "item") else v_) for c_, v_ in r_[["display_name", "nfl_position", "draft_round", "pick", "dy", "w", "vpk", "n", "go", "pres"]].items()} for k_, r_ in (("fast", f_), ("slow", s_))}
             res["getoff_pair"]["n_candidates"] = int(len(cand)); print("illustrative pair:", res["getoff_pair"])
+        # E23 (pre-registered): does speed predict get-off for a draft class the model never saw? Plus a survivorship check.
+        lg = {}; Dm2 = ILm.copy(); Dm2["miss"] = Dm2.player_get_off.isna().astype(int); lg["missing_share"] = float(Dm2.miss.mean())
+        try: lg["missing_or"] = orci(G(f"miss ~ vs + {b}", Dm2))
+        except Exception as e_m: fail("getoff_missing", e_m)
+        Dg = Dm2.dropna(subset=["player_get_off"]).reset_index(drop=True); dd_rows = []
+        for cls in sorted(Dg.dy.unique()):
+            tr_g, te_g = Dg[Dg.dy != cls], Dg[Dg.dy == cls]
+            f0_ = smf.ols(f"player_get_off ~ {b_noclass}", tr_g).fit(); f1_ = smf.ols(f"player_get_off ~ vs + {b_noclass}", tr_g).fit()
+            dd_rows.append(pd.DataFrame({"nfl_id": te_g.nfl_id.values, "dy": cls, "y": te_g.player_get_off.values, "p0": f0_.predict(te_g).values, "p1": f1_.predict(te_g).values}))
+        HO = pd.concat(dd_rows, ignore_index=True); HO["d"] = (HO.y - HO.p0) ** 2 - (HO.y - HO.p1) ** 2
+        lg["mse_gain"] = float(HO.d.mean()); lg["mse0"] = float(((HO.y - HO.p0) ** 2).mean()); lg["mse_gain_pct"] = float(100 * HO.d.mean() / ((HO.y - HO.p0) ** 2).mean())
+        ids_h = HO.nfl_id.unique(); gh_ = {i: np.where(HO.nfl_id.values == i)[0] for i in ids_h}; rng_h = np.random.default_rng(37); bh_ = []
+        dvals = HO.d.values
+        for _ in range(100 if FAST else 1000): bh_.append(float(dvals[np.concatenate([gh_[i] for i in rng_h.choice(ids_h, len(ids_h))])].mean()))
+        lg["mse_gain_ci"] = [float(np.percentile(bh_, 2.5)), float(np.percentile(bh_, 97.5))]; lg["mse_gain_pct_ci"] = [100 * x_ / lg["mse0"] for x_ in lg["mse_gain_ci"]]
+        lg["by_class"] = {str(int(c_)): float(g_.d.mean()) for c_, g_ in HO.groupby("dy")}
+        PH = HO.groupby("nfl_id").agg(n=("y", "size"), y=("y", "mean"), p0=("p0", "mean"), p1=("p1", "mean")); PH = PH[PH.n >= 50]
+        lg["player_rho0"] = float(spearmanr(PH.y, PH.p0)[0]); lg["player_rho1"] = float(spearmanr(PH.y, PH.p1)[0]); lg["player_n"] = int(len(PH))
+        gp_sd = gp[gp.n >= 100].go.std(); lg["between_player_sd_s"] = float(gp_sd); lg["n_players_100"] = int((gp.n >= 100).sum())
+        res["getoff_loco"] = lg; print("get-off out of class:", json.dumps(lg, indent=1, default=float))
         res["continuous_by_class"] = cbc; print("continuous outcomes by class:", json.dumps(cbc, indent=1, default=float))
     except Exception as e_c: fail("continuous_by_class", e_c)
     res["within_class"] = wc_; print(json.dumps(wc_, indent=1, default=float))
@@ -910,7 +933,7 @@ r, lo, hi = tr_["r_vpk_s10"]; ax[0].text(0.04, 0.95, f"within interior r = {tr_[
 headline(ax[0], "Top-end speed shows up in the rush", "Combine 40 top speed vs. in-game speed 1.0 s into a pass rush; dot size = game rushes")
 ax[1].scatter(dd_.d_s10, dd_.s_10, s=np.clip(dd_.n / 6, 14, 90), c=np.where(dd_.ipos > 0.5, BLUE, ORANGE), alpha=0.8, lw=0.8, edgecolor=SURF); ax[1].set_xlabel("Combine pass-rush drill: speed 1.0 s in (yd/s)")
 r, lo, hi = tr_["r_drill_s10"]; r_wo = tr_["r_drill_s10_trim"][0]; n_out = tr_["n_drill_outliers"]
-ax[1].text(0.97, 0.05, f"r = {r:.2f}  (95% CI {lo:.2f} to {hi:.2f})\nwithout {n_out} drill outlier(s) beyond 3 SD: r = {r_wo:.2f}\nn = {tr_['n_drill']} linemen", transform=ax[1].transAxes, ha="right", va="bottom", fontsize=10, fontweight="bold")
+ax[1].text(0.97, 0.05, f"r = {r:.2f}  (95% CI {lo:.2f} to {hi:.2f})\nwithout {n_out} drill outlier{'s' if n_out != 1 else ''} beyond 3 SD: r = {r_wo:.2f}\nn = {tr_['n_drill']} linemen", transform=ax[1].transAxes, ha="right", va="bottom", fontsize=10, fontweight="bold")
 headline(ax[1], "The drill's speed 1.0 s in tracks it more weakly", "Same in-game outcome vs. the Combine pass-rush drill's speed 1.0 s in")
 ax[1].legend(handles=[Line2D([0], [0], marker="o", ls="", color=BLUE, label="Interior DL"), Line2D([0], [0], marker="o", ls="", color=ORANGE, label="Edge")], loc="upper right"); fig.tight_layout(); save(fig, "fig3_translation.png")
 
@@ -950,9 +973,9 @@ dz = res["dose"]; co = res["forty_poly"]; fig, ax = plt.subplots(1, 2, figsize=(
 for a, lab, col in [(ax[0], "INT", BLUE), (ax[1], "EDGE", ORANGE)]:
     d = dz[lab]; g_ = np.array(d["grid"]); a.fill_between(g_, np.array(d["lo"]) * 100, np.array(d["hi"]) * 100, color=col, alpha=0.18, lw=0); a.plot(g_, np.array(d["mid"]) * 100, color=col, lw=2.6)
     a.plot(d["speeds"], np.full(len(d["speeds"]), 0.35), "|", color=MUTED, ms=9, alpha=0.7); a.set_xlabel("Combine top speed (yd/s)  [stopwatch 40 equivalent]")
-    tk = np.array([9.0, 9.5, 10.0, 10.5, 11.0]); tk = tk[(tk >= g_.min() - 0.01) & (tk <= g_.max() + 0.01)]; a.set_xticks(tk); a.set_xticklabels([f"{t:.1f}\n[{np.polyval(co, t):.2f}s]" for t in tk]); a.set_ylim(0, 16)
+    tk = np.array([9.0, 9.5, 10.0, 10.5, 11.0]); tk = tk[(tk >= g_.min() - 0.01) & (tk <= g_.max() + 0.01)]; a.set_xticks(tk); a.set_xticklabels([f"{t:.1f}\n[{np.polyval(co, t):.2f}s]" for t in tk]); a.set_ylim(0, max(16, max(max(dz[k_]["hi"]) for k_ in dz) * 100 + 1))
 ax[0].set_ylabel("Adjusted pressure rate per rush snap (%)"); nn = res["n"]; pq = res["p10_p90"]
-headline(ax[0], "Interior DL: faster is better", f"{nn['int_players']} players, {nn['int_snaps']:,} rushes"); headline(ax[1], "Edge rushers: weak, uncertain speed signal", f"{nn['edge_players']} players, {nn['edge_snaps']:,} rushes; OR {res['table1']['edge_pressure']['OR']:.2f}, p = {res['table1']['edge_pressure']['p']:.2f}")
+headline(ax[0], "Interior DL: leans higher with speed", f"{nn['int_players']} players, {nn['int_snaps']:,} rushes"); headline(ax[1], "Edge rushers: weak, uncertain speed signal", f"{nn['edge_players']} players, {nn['edge_snaps']:,} rushes; OR {res['table1']['edge_pressure']['OR']:.2f}, p = {res['table1']['edge_pressure']['p']:.2f}")
 [ax[0].axvline(v_, color=MUTED, lw=1, ls=":") for v_ in (pq["v10"], pq["v90"])]; ax[0].text(pq["v10"], 15.2, "10th pct", ha="center", fontsize=8.5, color=INK2); ax[0].text(pq["v90"], 15.2, "90th pct", ha="center", fontsize=8.5, color=INK2)
 ax[0].annotate(f"{pq['rate10']*100:.1f}%", (pq["v10"], pq["rate10"] * 100), xytext=(-4, -22), textcoords="offset points", color=BLUE, fontweight="bold", ha="center")
 ax[0].annotate(f"{pq['rate90']*100:.1f}%", (pq["v90"], pq["rate90"] * 100), xytext=(0, 12), textcoords="offset points", color=BLUE, fontweight="bold", ha="center")
