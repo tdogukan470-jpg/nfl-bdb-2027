@@ -66,7 +66,7 @@ Each +0.5 yd/s raises the odds of pressure by {ORPCT:table1.int_pressure}% (odds
 Correcting for who reached the field, for game context and for sensor noise leaves the estimate between {CORR_RANGE} (Appendix A1 to A3).
 
 ![Fig. 6: Robustness checks with clustered and player-bootstrap intervals]({IMG}fig6_robust.png)
-*Figure 6. The interior pressure effect under the baseline plus {N_RB} alternative specifications: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
+*Figure 6. The interior pressure effect under the baseline and key alternatives (all {N_RB} in the notebook): fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
 
 **Top speed, not burst.** Top speed carries the effect (OR {OR:decomp.top}) and burst carries none (OR {OR:decomp.burst}, p = {P2:decomp.burst.p}); the stopwatch 10-yard split adds nothing once the 40 is in (p = {P2:decomp_stopwatch.ten.p}).
 
@@ -88,9 +88,7 @@ A scout needs the finding to hold for the next draft, so we hide one whole draft
 | Interior, split > {CUT_R} s ({N_R} players) | POE {POE_R} | Lower pass-rush priority; let tape decide |
 | Interior up to {W2} lb (the lightest band includes linebackers and DBs aligned inside) | Fast-minus-slow POE {GAP_LIGHT_CI} (<= {W1} lb) and {GAP_MID_CI} ({W1P} to {W2} lb) | {LIGHT_ACTION} |
 | Interior {W2P}+ lb (nose types) | Fast-minus-slow {GAP_HEAVY} | No gap; use other traits |
-| Fast edge, efficient drill path ({N_FE} players) | POE {POE_FE} | No clear gain from speed; judge on tape |
-| Fast edge, inefficient drill path ({N_FI} players) | POE {POE_FI}; wide {POE_FI_W}, tight {POE_FI_T} (exploratory) | Wide and tight alignment differ little |
-| Slow edge, efficient / inefficient path ({N_SE} / {N_SI} players) | POE {POE_SE} and {POE_SI} | Below the fast cells; edge speed may help a little (OR CI includes 1) |
+| Edge, any speed x drill-path profile ({N_FE}/{N_FI}/{N_SE}/{N_SI} players) | Fast: POE {POE_FE} and {POE_FI}; slow: {POE_SE} and {POE_SI} | Leans toward fast, but cells are small; judge on tape |
 | OL, WR/TE | No detectable speed effect | Do not pay for speed alone |
 
 Edge cells use the drill's path efficiency, which does not predict pressure on its own (main effect p = {P2:matrix.edge_main_pez.p}; speed x path interaction p = {P2:matrix.edge_interaction.p}), so judge path directness on tape. Weight bands proxy 3-tech versus nose. {CUTSCAN}

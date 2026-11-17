@@ -66,7 +66,7 @@ Each +0.5 yd/s raises the odds of pressure by 22% (odds ratio, OR, 1.22; cluster
 Correcting for who reached the field, for game context and for sensor noise leaves the estimate between 1.17 and 1.23 (Appendix A1 to A3).
 
 ![Fig. 6: Robustness checks with clustered and player-bootstrap intervals](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig6_robust.png)
-*Figure 6. The interior pressure effect under the baseline plus 22 alternative specifications: fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
+*Figure 6. The interior pressure effect under the baseline and key alternatives (all 22 in the notebook): fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
 
 **Top speed, not burst.** Top speed carries the effect (OR 1.21) and burst carries none (OR 1.03, p = 0.54); the stopwatch 10-yard split adds nothing once the 40 is in (p = 0.35).
 
@@ -88,9 +88,7 @@ A scout needs the finding to hold for the next draft, so we hide one whole draft
 | Interior, split > 2.20 s (23 players) | POE -0.9 [-1.9, +0.1] | Lower pass-rush priority; let tape decide |
 | Interior up to 294 lb (the lightest band includes linebackers and DBs aligned inside) | Fast-minus-slow POE +2.3 [-4.3, +11.9] (<= 263 lb) and +3.1 [+0.6, +5.3] (264 to 294 lb) | Weigh the split here; the 264 to 294 lb gap excludes 0 |
 | Interior 297+ lb (nose types) | Fast-minus-slow +0.5 [-2.4, +2.4] | No gap; use other traits |
-| Fast edge, efficient drill path (16 players) | POE +1.5 [-1.8, +3.3] | No clear gain from speed; judge on tape |
-| Fast edge, inefficient drill path (18 players) | POE -0.8 [-3.8, +0.5]; wide -1.2, tight -1.7 (exploratory) | Wide and tight alignment differ little |
-| Slow edge, efficient / inefficient path (18 / 15 players) | POE -2.2 [-4.4, -0.4] and -3.0 [-6.2, +0.2] | Below the fast cells; edge speed may help a little (OR CI includes 1) |
+| Edge, any speed x drill-path profile (16/18/18/15 players) | Fast: POE +1.5 [-1.8, +3.3] and -0.8 [-3.8, +0.5]; slow: -2.2 [-4.4, -0.4] and -3.0 [-6.2, +0.2] | Leans toward fast, but cells are small; judge on tape |
 | OL, WR/TE | No detectable speed effect | Do not pay for speed alone |
 
 Edge cells use the drill's path efficiency, which does not predict pressure on its own (main effect p = 0.44; speed x path interaction p = 0.54), so judge path directness on tape. Weight bands proxy 3-tech versus nose. The split cut-off was chosen from 7 scanned values (2.01 to 2.27 s); only 2.12 s gives a fast-minus-slow gap whose interval excludes 0, so the interior rows are exploratory.

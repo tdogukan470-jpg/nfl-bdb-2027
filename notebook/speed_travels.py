@@ -985,14 +985,16 @@ fig.text(0.012, 0.03, "Adjusted for weight, arm length, draft slot, draft class,
 # **Figure 6.** Stress tests.
 
 # %%
-rb = res["robust"]; rows_ = list(rb.items()); nloo = res["loo_OR_range"]; fig, ax = plt.subplots(figsize=(14, 8)); y = np.arange(len(rows_) + 1)[::-1]; XR = max(1.8, max(v["hi"] for v in rb.values()) + 0.12)
+KEY6 = ["Baseline (all controls)", "+ defensive team fixed effects", "+ opposing offense fixed effects", "Sack", "Stopwatch 40 instead (per 0.2 s faster)", "Season 2023 only", "Season 2024 only", "Season 2025 only",
+        "Sensor-cleaned: Savitzky-Golay filter", "Roster DT, NT or DE only", "IPW selection weights (any rush snap)", "Heckman-type control function (any rush snap)", "Context-adjusted (xP offset)"]
+rb_all = res["robust"]; rb = {k: rb_all[k] for k in KEY6 if k in rb_all}; rows_ = list(rb.items()); nloo = res["loo_OR_range"]; fig, ax = plt.subplots(figsize=(14, 6.5)); y = np.arange(len(rows_) + 1)[::-1]; XR = max(1.8, max(v["hi"] for v in rb.values()) + 0.12)
 for yy, (k, v) in zip(y[:-1], rows_):
     ax.hlines(yy, v["lo"], v["hi"], color=BLUE, lw=2.2); ax.plot(v["OR"], yy, "o", color=BLUE, ms=7.5, mec=SURF, mew=1.4); ax.text(XR + 0.03, yy, f"{v['OR']:.2f}  [{v['lo']:.2f}, {v['hi']:.2f}]", va="center", fontsize=9, color=INK2)
 ax.hlines(y[-1], nloo[0], nloo[1], color=BLUE, lw=5, alpha=0.5); ax.text(XR + 0.03, y[-1], f"range {nloo[0]:.2f} to {nloo[1]:.2f}", va="center", fontsize=9, color=INK2)
 pbx = res.get("pooled_boot")
 if pbx: ax.set_ylim(-0.7, y[0] + 1.5); ax.hlines(y[0] + 0.9, pbx["OR_lo"], pbx["OR_hi"], color=ORANGE, lw=2.2); ax.plot(rb[rows_[0][0]]["OR"], y[0] + 0.9, "o", color=ORANGE, ms=7.5, mec=SURF, mew=1.4); ax.text(XR + 0.03, y[0] + 0.9, f"[{pbx['OR_lo']:.2f}, {pbx['OR_hi']:.2f}]  baseline, player bootstrap", va="center", fontsize=9, color=ORANGE)
 ax.set_yticks(y); ax.set_yticklabels([k for k, _ in rows_] + ["Drop any single player (all refits)"], fontsize=9.5); ax.axvline(1, color=INK2, lw=1.2, ls="--"); ax.set_xlim(0.9, XR); ax.set_xlabel("Odds ratio of generating pressure per +0.5 yd/s top speed (stopwatch row: per 0.2 s faster)"); ax.grid(axis="y", visible=False)
-headline(ax, "Stable point estimates, but the uncertainty is wider than these bars", f"Clustered-SE 95% CIs (blue); orange = baseline with whole players resampled. Point estimates {min(v['OR'] for v in rb.values()):.2f} to {max(v['OR'] for v in rb.values()):.2f}; {sum(v['lo'] <= 1 for v in rb.values())} of {len(rb)} clustered intervals touch 1.0" + ("; so does the player-bootstrap interval" if (res.get("pooled_boot") or {}).get("OR_lo", 2) <= 1 else "")); fig.tight_layout(); save(fig, "fig6_robust.png", right=0.74)
+headline(ax, "Stable point estimates, but the uncertainty is wider than these bars", f"Blue: clustered 95% CIs; orange: whole players resampled. {len(rb)} key rows of {len(rb_all)}; all {len(rb_all)} run {min(v['OR'] for v in rb_all.values()):.2f} to {max(v['OR'] for v in rb_all.values()):.2f}, {sum(v['lo'] <= 1 for v in rb_all.values())} touch 1.0.") ; fig.tight_layout(); save(fig, "fig6_robust.png", right=0.74)
 
 # %% [markdown]
 # **Figure 7.** The interior pressure effect class by class.
