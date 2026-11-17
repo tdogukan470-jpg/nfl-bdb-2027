@@ -9,3 +9,5 @@
 6. DONE 2026-11-08: Kaggle body updated from commit 2772446 and verified live (Submitted, 7 inline + 7 gallery).
 7. DONE in v24 (except Fig 3 cosmetic overlap): Figure fixes from judge review (needs bridge + Kaggle run + gallery re-upload): Fig 5 title must reflect bootstrap/class caveat; Fig 3 right-panel axis/title consistency ('speed 1.0 s in' vs 'first step'), add dot-size legend; Fig 6 replace with speed-residual or band plot (current corr 0.13, labels not in text); check 190 lb 'interior' lineman in weight bands (possible data error); Fig 4 p10/p90 label placement.
 8. DONE 2026-11-09: Kaggle body from a9fb7c9 + gallery figs 3-7 replaced (v24) and verified live. Card thumbnail still the old Fig 4 (cosmetic).
+9. DONE 2026-11-17: Kaggle body from 475b1ba, new subtitle, gallery figs 2-7 replaced (v27, Fig 7 retitled new-season) and verified live via Browser 1 (Browser 2 is not signed in to Kaggle).
+10. NEXT: optional third blind read; otherwise only forum monitoring until 2027-01-06. Single biggest remaining lever per reviewer: restructure around the get-off finding (large rewrite, not started).
