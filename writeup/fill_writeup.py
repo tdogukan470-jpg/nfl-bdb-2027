@@ -158,7 +158,7 @@ if lc:
             prec = [k for k in cls_ if wc[k]["lo"] > 1.0]
             s_ += (" Per class (Fig. 6) the estimate " + ("exceeds 1" if all(wc[k]["OR"] > 1 for k in cls_) else "mixed") + " ("
                    + ", ".join(f"{k} {wc[k]['OR']:.2f}" for k in cls_) + f"; class difference p = {wc['interaction_wald_p']:.2f}), but only "
-                   + " and ".join(prec) + " is precise" + (f"; without {c_}, OR {ex_['OR']:.2f} [{ex_['lo']:.2f}, {ex_['hi']:.2f}]" if ex_ else "")
+                   + " and ".join(prec) + "'s clustered interval excludes 1" + (f", and its player bootstrap ({wc[prec[0]]['boot_ci'][0]:.2f} to {wc[prec[0]]['boot_ci'][1]:.2f}) touches 1" if len(prec) == 1 and wc[prec[0]].get("boot_ci") and wc[prec[0]]["boot_ci"][0] <= 1 else "") + (f"; without {c_}, OR {ex_['OR']:.2f} [{ex_['lo']:.2f}, {ex_['hi']:.2f}]" if ex_ else "")
                    + f". The data cannot separate a common effect from a {c_}-only one.")
             bc_ = wc[c_].get("boot_ci")
             tok["LIM_CLASS"] = (f"Only the {c_} class estimates the interior effect precisely" + (f" (its player bootstrap, {bc_[0]:.2f} to {bc_[1]:.2f}, touches 1)" if bc_ and bc_[0] <= 1 else "")

@@ -23,3 +23,8 @@ Writeups themselves are private until judging; only notebooks were readable.
 
 ## Our differentiators (HYPOTHESIS about judge perception)
 Snap-level GEE with player clustering; sensor audit; IPW + Heckman selection correction over all 510 prospects; out-of-fold context model; Beta-Binomial shrinkage; formal IKT mediation; BH-FDR over all tests; decision matrix in scouting units; literature contrast.
+
+## 2026-11-17 forum scan
+- 759641 (host Tom Bliss): any public/external data allowed, but the submission should focus on BDB 2027 data.
+- 759621 (Kaggle staff): pre-registration hash posts not needed and not considered by judges; judging uses only the final Writeup and attached notebook.
+- Several teams posted pre-registration hashes, including a "2026 out-of-time test" on nflverse data from week 11 (759351): competitors are adding out-of-time evidence.

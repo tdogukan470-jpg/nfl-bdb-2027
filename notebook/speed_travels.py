@@ -290,6 +290,8 @@ def bootr(x, y, B=2000):
 dd_ = pg.dropna(subset=["d_s10"])
 res["translate"] = dict(n_game=len(pg), r_vpk_s10=bootr(pg.vpk.values, pg.s_10.values), r_vpk_smax=bootr(pg.vpk.values, pg.smax_pre.values), n_drill=len(dd_),
                         r_drill_s10=bootr(dd_.d_s10.values, dd_.s_10.values), r_drill_s05=bootr(dd_.d_s05.values, dd_.s_10.values), r_drill_speak=bootr(dd_.d_speak.values, dd_.s_10.values))
+_z = (dd_.d_s10 - dd_.d_s10.mean()) / dd_.d_s10.std(); _k = (_z.abs() <= 3).values
+res["translate"]["r_drill_s10_trim"] = bootr(dd_.d_s10.values[_k], dd_.s_10.values[_k]); res["translate"]["n_drill_outliers"] = int((~_k).sum())
 for nm, msk in (("interior", pg.ipos > 0.5), ("edge", pg.ipos <= 0.5)):
     q = pg[msk]; res["translate"][f"within_{nm}"] = dict(n=len(q), r_vpk_s10=bootr(q.vpk.values, q.s_10.values) if len(q) > 10 else None)
 print(json.dumps(res["translate"], indent=1))
@@ -879,7 +881,7 @@ for i, (k, v) in enumerate(order):
     col = BLUE if k.startswith("40") else ORANGE; ax.hlines(i, 0, v, color=col, lw=2.4, alpha=0.9); ax.plot(v, i, "o", ms=8, color=col, mec=SURF, mew=1.5); ax.text(v + 0.02, i, f"{v:.2f}", va="center", fontsize=9.5, color=INK2)
 ax.set_yticks(range(len(order))); ax.set_yticklabels([k for k, _ in order], fontsize=9.5); ax.set_xlim(0, 1.12); ax.set_xlabel("Test-retest correlation between a player's first two attempts"); ax.grid(axis="y", visible=False)
 ax.legend(handles=[Line2D([0], [0], color=BLUE, lw=3, label=f"40-yard dash (n={res['reliability_n']['forty']} players)"), Line2D([0], [0], color=ORANGE, lw=3, label=f"Pass-rush drill, DL (n={res['reliability_n']['prd']})")], loc="lower right")
-headline(ax, "Top speed is measured almost perfectly; early-phase metrics are mostly noise", "How repeatable is each metric across a prospect's two attempts?"); fig.tight_layout(); save(fig, "fig2_reliability.png")
+headline(ax, "The 40's speed readings repeat; its acceleration fit and the drill's first-step numbers do not", "How repeatable is each metric across a prospect's two attempts?"); fig.tight_layout(); save(fig, "fig2_reliability.png")
 
 # %% [markdown]
 # **Figure 3.** Which Combine numbers show up in the game?
@@ -890,9 +892,10 @@ ax[0].scatter(pg.vpk, pg.s_10, s=np.clip(pg.n / 6, 14, 90), c=np.where(pg.ipos >
 r, lo, hi = tr_["r_vpk_s10"]; ax[0].text(0.04, 0.95, f"within interior r = {tr_['within_interior']['r_vpk_s10'][0]:.2f}, within edge r = {tr_['within_edge']['r_vpk_s10'][0]:.2f}\npooled r = {r:.2f} (inflated by the group gap); n = {tr_['n_game']}", transform=ax[0].transAxes, va="top", fontsize=10, fontweight="bold")
 headline(ax[0], "Top-end speed shows up in the rush", "Combine 40 top speed vs. in-game speed 1.0 s into a pass rush; dot size = game rushes")
 ax[1].scatter(dd_.d_s10, dd_.s_10, s=np.clip(dd_.n / 6, 14, 90), c=np.where(dd_.ipos > 0.5, BLUE, ORANGE), alpha=0.8, lw=0.8, edgecolor=SURF); ax[1].set_xlabel("Combine pass-rush drill: speed 1.0 s in (yd/s)")
-r, lo, hi = tr_["r_drill_s10"]; ax[1].text(0.04, 0.95, f"r = {r:.2f}  (95% CI {lo:.2f} to {hi:.2f})\nn = {tr_['n_drill']} linemen", transform=ax[1].transAxes, va="top", fontsize=10.5, fontweight="bold")
-headline(ax[1], "The drill's speed 1.0 s in does not", "Same in-game outcome vs. the Combine pass-rush drill's speed 1.0 s in")
-ax[1].legend(handles=[Line2D([0], [0], marker="o", ls="", color=BLUE, label="Interior DL"), Line2D([0], [0], marker="o", ls="", color=ORANGE, label="Edge")], loc="lower right"); fig.tight_layout(); save(fig, "fig3_translation.png")
+r, lo, hi = tr_["r_drill_s10"]; r_wo = tr_["r_drill_s10_trim"][0]; n_out = tr_["n_drill_outliers"]
+ax[1].text(0.97, 0.05, f"r = {r:.2f}  (95% CI {lo:.2f} to {hi:.2f})\nwithout {n_out} drill outlier(s) beyond 3 SD: r = {r_wo:.2f}\nn = {tr_['n_drill']} linemen", transform=ax[1].transAxes, ha="right", va="bottom", fontsize=10, fontweight="bold")
+headline(ax[1], "The drill's speed 1.0 s in tracks it more weakly", "Same in-game outcome vs. the Combine pass-rush drill's speed 1.0 s in")
+ax[1].legend(handles=[Line2D([0], [0], marker="o", ls="", color=BLUE, label="Interior DL"), Line2D([0], [0], marker="o", ls="", color=ORANGE, label="Edge")], loc="upper right"); fig.tight_layout(); save(fig, "fig3_translation.png")
 
 # %% [markdown]
 # **Figure 4.** Interior DL: pressure rate rises with Combine top speed. Edge rushers: it does not.
@@ -921,7 +924,7 @@ ax.hlines(y[-1], nloo[0], nloo[1], color=BLUE, lw=5, alpha=0.5); ax.text(XR + 0.
 pbx = res.get("pooled_boot")
 if pbx: ax.set_ylim(-0.7, y[0] + 1.5); ax.hlines(y[0] + 0.9, pbx["OR_lo"], pbx["OR_hi"], color=ORANGE, lw=2.2); ax.plot(rb[rows_[0][0]]["OR"], y[0] + 0.9, "o", color=ORANGE, ms=7.5, mec=SURF, mew=1.4); ax.text(XR + 0.03, y[0] + 0.9, f"[{pbx['OR_lo']:.2f}, {pbx['OR_hi']:.2f}]  baseline, player bootstrap", va="center", fontsize=9, color=ORANGE)
 ax.set_yticks(y); ax.set_yticklabels([k for k, _ in rows_] + ["Drop any single player (all refits)"], fontsize=9.5); ax.axvline(1, color=INK2, lw=1.2, ls="--"); ax.set_xlim(0.9, XR); ax.set_xlabel("Odds ratio of generating pressure per +0.5 yd/s top speed (stopwatch row: per 0.2 s faster)"); ax.grid(axis="y", visible=False)
-headline(ax, "Stable point estimates, but the uncertainty is wider than these bars", f"Clustered-SE 95% CIs (blue); orange = baseline with whole players resampled. Point estimates {min(v['OR'] for v in rb.values()):.2f} to {max(v['OR'] for v in rb.values()):.2f}; {sum(v['lo'] <= 1 for v in rb.values())} of {len(rb)} intervals touch 1.0"); fig.tight_layout(); save(fig, "fig5_robust.png", right=0.74)
+headline(ax, "Stable point estimates, but the uncertainty is wider than these bars", f"Clustered-SE 95% CIs (blue); orange = baseline with whole players resampled. Point estimates {min(v['OR'] for v in rb.values()):.2f} to {max(v['OR'] for v in rb.values()):.2f}; {sum(v['lo'] <= 1 for v in rb.values())} of {len(rb)} clustered intervals touch 1.0" + ("; so does the player-bootstrap interval" if (res.get("pooled_boot") or {}).get("OR_lo", 2) <= 1 else "")); fig.tight_layout(); save(fig, "fig5_robust.png", right=0.74)
 
 # %% [markdown]
 # **Figure 6.** The interior effect class by class.
@@ -939,7 +942,7 @@ for yv, (lab, o_, l_, h_, bl, bh, nn_) in zip(yy6, rows6):
 ax.set_xscale("log"); ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter()); ax.set_xticks([0.5, 0.75, 1, 1.5, 2, 3, 4]); ax.set_xticklabels(["0.5", "0.75", "1", "1.5", "2", "3", "4"]); ax.set_xlim(0.25, 4.3)
 ax.axvline(1, color=INK2, lw=1.2, ls="--"); ax.set_yticks(yy6); ax.set_yticklabels([r_[0] for r_ in rows6], fontsize=10); ax.grid(axis="y", visible=False); ax.set_xlabel("Odds ratio of pressure per +0.5 yd/s top speed (log scale)")
 ax.legend(handles=[Line2D([0], [0], color=BLUE, lw=2.6, label="clustered-SE 95% CI"), Line2D([0], [0], color=ORANGE, lw=2.2, label="player-bootstrap 95% CI")], loc="lower left", fontsize=9)
-headline(ax, "Every class leans positive; only 2023 is precise", f"Interior DL. Class-by-speed interaction p = {wcf['interaction_wald_p']:.2f}: the data cannot tell a common effect from a 2023-only one.")
+headline(ax, "Every class leans positive; none is precise once whole players are resampled", f"Interior DL. Class-by-speed interaction p = {wcf['interaction_wald_p']:.2f}: the data cannot tell a common effect from a 2023-only one.")
 fig.tight_layout(); save(fig, "fig6_scouting.png", right=0.80)
 
 # %% [markdown]
