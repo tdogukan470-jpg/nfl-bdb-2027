@@ -5,13 +5,12 @@
 #
 # **Question.** Which movement traits measured by Combine player tracking carry over to regular-season NFL performance, and where do they not?
 #
-# **Short answer.**
-# 1. The 10 Hz data shows that a prospect's 40-yard time is almost entirely *top-end speed*; the start phase is much noisier and carries no extra signal.
-# 2. For **interior defensive linemen**, Combine top speed predicts pass-rush pressure in games, on top of draft slot, weight and arm length (odds ratio about 1.2 per +0.5 yd/s; the exact estimate, interval and every other number quoted in the writeup are printed below and saved to `results.json`). It is stable across seasons, teams, opponents, and outcome definitions.
-# 3. For **edge rushers, offensive linemen and receivers** we find no detectable speed signal. The boundary matters as much as the finding.
-# 4. Drill "first-step" numbers from the Combine pass-rush drill do not translate to in-game first-step speed, and are only about 0.4 to 0.6 reliable on their own.
-#
-# 5. **Added checks (Part 5).** The result survives sensor cleaning, selection-bias correction (IPW and a Heckman-type control function over all 510 prospects), and a cross-validated expected-pressure context model chosen out of fold between a regularized LightGBM and a ridge logistic regression (Pressure Over Expected). Formal mediation (Imai-Keele-Tingley) puts roughly a fifth of the interior effect through get-off; on the edge, path efficiency suppresses the speed effect. All tests carry Benjamini-Hochberg q-values.
+# **Short answer** (every number is printed below and saved to `results.json`).
+# 1. The 10 Hz data shows that a prospect's 40-yard time is almost entirely *top-end speed*, and top speed repeats almost perfectly across attempts.
+# 2. For **interior defensive linemen**, faster Combine top speed means a quicker get-off (seconds from the snap until the rusher crosses the line of scrimmage); this holds when whole players are resampled.
+# 3. Interior pressure also rises with speed (odds ratio about 1.2 per +0.5 yd/s, controlling for size, draft slot and class), but the whole-player bootstrap interval touches 1, no single draft class pins it down, and holding out a whole class does not improve prediction. Treat it as a tiebreaker, not a rule.
+# 4. For **edge rushers, offensive linemen and receivers** there is no consistent speed effect.
+# 5. Drill "first-step" numbers repeat poorly (about 0.4 to 0.5) and track in-game speed only weakly.
 #
 # 6. **Data hygiene.** Regular-season games only (`season_type == "REG"`), dropbacks only, ball frames removed from the Combine file, draft-class fixed effects in every model, and no per-play competition data written to the notebook output.
 #
@@ -816,6 +815,24 @@ try:
                                  boot_lo=float(np.percentile(bs, 2.5)), boot_hi=float(np.percentile(bs, 97.5)), players=int(Dc.nfl_id.nunique()), snaps=int(len(Dc)),
                                  raw_sd=float(Dm[m_].std()))
             cbc[m_] = out_
+        # Player-level get-off table (for Fig. 4) and a pre-specified illustrative pair:
+        # roster DT/NT/DE, 200+ rushes, same draft round, weight within 10 lb; pick the pair with the largest top-speed gap.
+        gp = (ILm.dropna(subset=["player_get_off"]).groupby("nfl_id")
+              .agg(n=("player_get_off", "size"), go=("player_get_off", "mean"), pres=("pres", "mean"), vpk=("vpk", "first"),
+                   w=("combine_weight", "first"), pick=("draft_overall_pick", "first"), dy=("dy", "first")).reset_index()
+              .merge(pl[["nfl_id", "display_name", "nfl_position", "draft_round"]], on="nfl_id", how="left"))
+        res["getoff_players"] = gp.to_dict("records")
+        cand = gp[(gp.n >= 200) & gp.nfl_position.isin(["DT", "NT", "DE"])].reset_index(drop=True); best = None
+        for i_ in range(len(cand)):
+            for j_ in range(i_ + 1, len(cand)):
+                a_, b_ = cand.iloc[i_], cand.iloc[j_]
+                if a_.draft_round == b_.draft_round and abs(a_.w - b_.w) <= 10:
+                    gap = abs(a_.vpk - b_.vpk)
+                    if best is None or gap > best[0]: best = (gap, a_, b_)
+        if best:
+            f_, s_ = (best[1], best[2]) if best[1].vpk > best[2].vpk else (best[2], best[1])
+            res["getoff_pair"] = {k_: {c_: (v_.item() if hasattr(v_, "item") else v_) for c_, v_ in r_[["display_name", "nfl_position", "draft_round", "pick", "dy", "w", "vpk", "n", "go", "pres"]].items()} for k_, r_ in (("fast", f_), ("slow", s_))}
+            res["getoff_pair"]["n_candidates"] = int(len(cand)); print("illustrative pair:", res["getoff_pair"])
         res["continuous_by_class"] = cbc; print("continuous outcomes by class:", json.dumps(cbc, indent=1, default=float))
     except Exception as e_c: fail("continuous_by_class", e_c)
     res["within_class"] = wc_; print(json.dumps(wc_, indent=1, default=float))
@@ -847,10 +864,10 @@ def save(fig, name, right=None):
     src = {"1": "Source: NFL Big Data Bowl 2027 Combine tracking (40-yard dash) and Combine results.",
            "2": "Source: NFL Big Data Bowl 2027 Combine tracking; correlation between each prospect's first two attempts.",
            "3": "Source: NFL Big Data Bowl 2027 Combine tracking and regular-season game tracking (dropback rushes).",
-           "4": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Model: logistic regression; bands from a player-cluster bootstrap.",
-           "5": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Models: logistic GEE clustered by rusher unless the row says otherwise.",
-           "6": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Each class fit separately (logistic GEE); bootstrap resamples whole players.",
-           "7": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Model: logistic regression fit on 2023-24, scored on 2025."}.get(n, "Source: NFL Big Data Bowl 2027 competition data.")
+           "4": "Source: NFL Big Data Bowl 2027, regular-season dropback rushes. Get-off = seconds from snap until the rusher crosses the line of scrimmage (player_get_off).",
+           "5": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Model: logistic regression; bands from a player-cluster bootstrap.",
+           "6": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Models: logistic GEE clustered by rusher unless the row says otherwise.",
+           "7": "Source: NFL Big Data Bowl 2027, regular-season dropbacks. Each class fit separately (logistic GEE); bootstrap resamples whole players."}.get(n, "Source: NFL Big Data Bowl 2027 competition data.")
     fig.text(0.012, 0.012, src, fontsize=9.5, color=MUTED)
     fig.savefig(f"{FIG}/{name}", dpi=200, facecolor=SURF); plt.show()
 def headline(ax, t, sub=None):
@@ -898,7 +915,35 @@ headline(ax[1], "The drill's speed 1.0 s in tracks it more weakly", "Same in-gam
 ax[1].legend(handles=[Line2D([0], [0], marker="o", ls="", color=BLUE, label="Interior DL"), Line2D([0], [0], marker="o", ls="", color=ORANGE, label="Edge")], loc="upper right"); fig.tight_layout(); save(fig, "fig3_translation.png")
 
 # %% [markdown]
-# **Figure 4.** Interior DL: pressure rate rises with Combine top speed. Edge rushers: it does not.
+# **Figure 4.** Faster interior linemen get across the line sooner.
+
+# %%
+gpf = pd.DataFrame(res["getoff_players"]); gpf = gpf[gpf.n >= 50]; cg = res["continuous_by_class"]["player_get_off"]; sdg = cg["all"]["raw_sd"]
+fig, ax = plt.subplots(1, 2, figsize=(12, 4.9), gridspec_kw={"width_ratios": [1.35, 1]})
+ax[0].scatter(gpf.vpk, gpf.go, s=np.clip(gpf.n / 4, 15, 140), color=BLUE, alpha=0.75, edgecolor=SURF, lw=0.8)
+cf_ = np.polyfit(gpf.vpk, gpf.go, 1, w=np.sqrt(gpf.n)); xx_ = np.linspace(gpf.vpk.min(), gpf.vpk.max(), 50); ax[0].plot(xx_, np.polyval(cf_, xx_), color=INK2, lw=1.6, ls="--")
+pr_ = res.get("getoff_pair")
+if pr_:
+    for k_, col_ in (("fast", ORANGE), ("slow", INK2)):
+        q_ = pr_[k_]; ax[0].plot(q_["vpk"], q_["go"], "o", ms=12, mfc="none", mec=col_, mew=2); ax[0].annotate(q_["display_name"], (q_["vpk"], q_["go"]), xytext=(8, 6), textcoords="offset points", fontsize=9.5, color=col_, fontweight="bold")
+ax[0].set_xlabel("Combine top speed in the 40 (yd/s)"); ax[0].set_ylabel("Mean get-off on dropback rushes (s)")
+headline(ax[0], "Faster linemen cross the line sooner", f"{len(gpf)} interior players with 50+ rushes; dot size = rushes; dashed = rush-weighted fit")
+rows4 = [("All classes", cg["all"])] + [(f"{k} class only", cg[k]) for k in sorted(k for k in cg if k.isdigit())]; yy4 = np.arange(len(rows4))[::-1]
+for yv, (lab, v) in zip(yy4, rows4):
+    ms_ = lambda x: -x * sdg * 1000
+    ax[1].hlines(yv - 0.16, ms_(v["boot_hi"]), ms_(v["boot_lo"]), color=ORANGE, lw=2.2); ax[1].hlines(yv + 0.12, ms_(v["hi"]), ms_(v["lo"]), color=BLUE, lw=2.6)
+    ax[1].plot(ms_(v["b"]), yv + 0.12, "o", color=BLUE, ms=8, mec=SURF, mew=1.4); ax[1].text(1.02, yv, f"{ms_(v['b']):.0f} ms ({v['players']} pl.)", transform=ax[1].get_yaxis_transform(), va="center", fontsize=9.5, color=INK2)
+XL4 = (-60, 200); ax[1].set_xlim(*XL4)
+for yv, (lab, v) in zip(yy4, rows4):
+    if -v["boot_lo"] * sdg * 1000 > XL4[1] or -v["boot_hi"] * sdg * 1000 < XL4[0]: ax[1].text(XL4[1] - 2, yv - 0.38, "bootstrap interval runs past the axis", ha="right", fontsize=8, color=ORANGE)
+ax[1].axvline(0, color=INK2, lw=1.2, ls="--"); ax[1].set_yticks(yy4); ax[1].set_yticklabels([r_[0] for r_ in rows4]); ax[1].grid(axis="y", visible=False)
+ax[1].set_xlabel("Milliseconds quicker get-off per +0.5 yd/s top speed")
+ax[1].legend(handles=[Line2D([0], [0], color=BLUE, lw=2.6, label="clustered-SE 95% CI"), Line2D([0], [0], color=ORANGE, lw=2.2, label="player-bootstrap 95% CI")], loc="upper right", fontsize=9)
+headline(ax[1], "Holds when whole players are resampled", "Adjusted for weight, arm, draft slot, class, down and distance")
+fig.tight_layout(); save(fig, "fig4_getoff.png", right=0.86)
+
+# %% [markdown]
+# **Figure 5.** Interior DL: pressure rate rises with Combine top speed. Edge rushers: weak and uncertain.
 
 # %%
 dz = res["dose"]; co = res["forty_poly"]; fig, ax = plt.subplots(1, 2, figsize=(11.5, 4.7), sharey=True)
@@ -911,10 +956,10 @@ headline(ax[0], "Interior DL: faster is better", f"{nn['int_players']} players, 
 [ax[0].axvline(v_, color=MUTED, lw=1, ls=":") for v_ in (pq["v10"], pq["v90"])]; ax[0].text(pq["v10"], 15.2, "10th pct", ha="center", fontsize=8.5, color=INK2); ax[0].text(pq["v90"], 15.2, "90th pct", ha="center", fontsize=8.5, color=INK2)
 ax[0].annotate(f"{pq['rate10']*100:.1f}%", (pq["v10"], pq["rate10"] * 100), xytext=(-4, -22), textcoords="offset points", color=BLUE, fontweight="bold", ha="center")
 ax[0].annotate(f"{pq['rate90']*100:.1f}%", (pq["v90"], pq["rate90"] * 100), xytext=(0, 12), textcoords="offset points", color=BLUE, fontweight="bold", ha="center")
-fig.text(0.012, 0.03, "Adjusted for weight, arm length, draft slot, draft class, down and distance; band = 95% player-cluster bootstrap CI. Ticks along the bottom: individual players.", fontsize=8.5, color=INK2); fig.tight_layout(); save(fig, "fig4_dose.png")
+fig.text(0.012, 0.03, "Adjusted for weight, arm length, draft slot, draft class, down and distance; band = 95% player-cluster bootstrap CI. Ticks along the bottom: individual players.", fontsize=8.5, color=INK2); fig.tight_layout(); save(fig, "fig5_dose.png")
 
 # %% [markdown]
-# **Figure 5.** Stress tests.
+# **Figure 6.** Stress tests.
 
 # %%
 rb = res["robust"]; rows_ = list(rb.items()); nloo = res["loo_OR_range"]; fig, ax = plt.subplots(figsize=(14, 8)); y = np.arange(len(rows_) + 1)[::-1]; XR = max(1.8, max(v["hi"] for v in rb.values()) + 0.12)
@@ -924,10 +969,10 @@ ax.hlines(y[-1], nloo[0], nloo[1], color=BLUE, lw=5, alpha=0.5); ax.text(XR + 0.
 pbx = res.get("pooled_boot")
 if pbx: ax.set_ylim(-0.7, y[0] + 1.5); ax.hlines(y[0] + 0.9, pbx["OR_lo"], pbx["OR_hi"], color=ORANGE, lw=2.2); ax.plot(rb[rows_[0][0]]["OR"], y[0] + 0.9, "o", color=ORANGE, ms=7.5, mec=SURF, mew=1.4); ax.text(XR + 0.03, y[0] + 0.9, f"[{pbx['OR_lo']:.2f}, {pbx['OR_hi']:.2f}]  baseline, player bootstrap", va="center", fontsize=9, color=ORANGE)
 ax.set_yticks(y); ax.set_yticklabels([k for k, _ in rows_] + ["Drop any single player (all refits)"], fontsize=9.5); ax.axvline(1, color=INK2, lw=1.2, ls="--"); ax.set_xlim(0.9, XR); ax.set_xlabel("Odds ratio of generating pressure per +0.5 yd/s top speed (stopwatch row: per 0.2 s faster)"); ax.grid(axis="y", visible=False)
-headline(ax, "Stable point estimates, but the uncertainty is wider than these bars", f"Clustered-SE 95% CIs (blue); orange = baseline with whole players resampled. Point estimates {min(v['OR'] for v in rb.values()):.2f} to {max(v['OR'] for v in rb.values()):.2f}; {sum(v['lo'] <= 1 for v in rb.values())} of {len(rb)} clustered intervals touch 1.0" + ("; so does the player-bootstrap interval" if (res.get("pooled_boot") or {}).get("OR_lo", 2) <= 1 else "")); fig.tight_layout(); save(fig, "fig5_robust.png", right=0.74)
+headline(ax, "Stable point estimates, but the uncertainty is wider than these bars", f"Clustered-SE 95% CIs (blue); orange = baseline with whole players resampled. Point estimates {min(v['OR'] for v in rb.values()):.2f} to {max(v['OR'] for v in rb.values()):.2f}; {sum(v['lo'] <= 1 for v in rb.values())} of {len(rb)} clustered intervals touch 1.0" + ("; so does the player-bootstrap interval" if (res.get("pooled_boot") or {}).get("OR_lo", 2) <= 1 else "")); fig.tight_layout(); save(fig, "fig6_robust.png", right=0.74)
 
 # %% [markdown]
-# **Figure 6.** The interior effect class by class.
+# **Figure 7.** The interior pressure effect class by class.
 
 # %%
 wcf = res["within_class"]; t1 = res["table1"]["int_pressure"]; pbx = res.get("pooled_boot") or {}
@@ -943,24 +988,12 @@ ax.set_xscale("log"); ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatt
 ax.axvline(1, color=INK2, lw=1.2, ls="--"); ax.set_yticks(yy6); ax.set_yticklabels([r_[0] for r_ in rows6], fontsize=10); ax.grid(axis="y", visible=False); ax.set_xlabel("Odds ratio of pressure per +0.5 yd/s top speed (log scale)")
 ax.legend(handles=[Line2D([0], [0], color=BLUE, lw=2.6, label="clustered-SE 95% CI"), Line2D([0], [0], color=ORANGE, lw=2.2, label="player-bootstrap 95% CI")], loc="lower left", fontsize=9)
 headline(ax, "Every class leans positive; none is precise once whole players are resampled", f"Interior DL. Class-by-speed interaction p = {wcf['interaction_wald_p']:.2f}: the data cannot tell a common effect from a 2023-only one.")
-fig.tight_layout(); save(fig, "fig6_scouting.png", right=0.80)
-
-# %% [markdown]
-# **Figure 7.** Out-of-time check: fit on 2023 and 2024, predict 2025.
-
-# %%
-fw = res["forward"]; fig, ax = plt.subplots(1, 2, figsize=(11, 4.9), sharex=True, sharey=True); mx = max(Pt.y.max(), Pt["draft+size"].max(), Pt["draft+size+speed"].max()) * 100 + 1
-for a, k, ttl in [(ax[0], "draft+size", "Draft slot + size only"), (ax[1], "draft+size+speed", "Adding Combine top speed")]:
-    a.plot([0, mx], [0, mx], color=MUTED, lw=1.2, ls="--"); a.scatter(Pt[k] * 100, Pt.y * 100, s=np.clip(Pt.n / 3, 25, 150), color=BLUE, alpha=0.8, edgecolor=SURF, lw=0.8)
-    a.set_xlabel("Predicted 2025 pressure rate (%)"); mn_ = max(0, min(Pt.y.min(), Pt["draft+size"].min(), Pt["draft+size+speed"].min()) * 100 - 1); a.set_xlim(mn_, mx); a.set_ylim(mn_, mx); a.text(0.04, 0.95, f"Spearman = {fw['rho_' + k]:.2f}", transform=a.transAxes, va="top", fontsize=11, fontweight="bold")
-    headline(a, ttl, "Model fit on 2023-24 seasons only" if k == "draft+size" else "Same, plus top speed")
-ax[0].set_ylabel("Actual 2025 pressure rate (%)")
-fig.text(0.012, 0.03, f"{fw['eval_players']} interior DL with 75+ rushes in 2025. Log-loss improves in {fw['dll_pos_share']*100:.0f}% of player-level bootstrap draws; the 95% interval still includes zero.", fontsize=8.5, color=INK2); fig.tight_layout(); save(fig, "fig7_forward.png")
+fig.tight_layout(); save(fig, "fig7_byclass.png", right=0.80)
 
 # %% [markdown]
 # ## Limitations
-# * Only about 500 prospects (drafted 2023 to 2025) with 1 to 3 seasons of tracking, so effects are estimated from 88 interior and 121 edge rushers.
-# * No opponent tracking is available, so blocker quality is controlled only through team and opposing-offense fixed effects.
+# * About 500 prospects (drafted 2023 to 2025) with 1 to 3 seasons of tracking; the interior sample is 75 players and the edge sample 95, so per-class estimates are imprecise.
+# * No opponent tracking is available, so blocker quality is controlled only through team and opposing-offense fixed effects and a nearest-blocker distance proxy.
 # * Pressure is a credited outcome in `player_play`; sacks are too rare per player to be a stable target.
-# * The out-of-time check (32 players) is directionally positive but cannot, on its own, rule out zero.
-# * Speed and weight are strongly correlated among interior linemen (r about -0.8), so the speed coefficient is estimated conditional on weight; it holds across every specification we tried but is not a causal claim.
+# * The season-split check and the leave-one-class-out check do not show a reliable out-of-sample gain from adding speed.
+# * Speed and weight are strongly correlated among interior linemen (r about -0.8), so the speed coefficient is estimated conditional on weight; it is not a causal claim.

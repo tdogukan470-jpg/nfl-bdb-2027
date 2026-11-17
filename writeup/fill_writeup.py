@@ -91,8 +91,19 @@ if _ip:
     _dl = {"DT", "NT", "DE"}; tok["IL_NONDL"] = str(sum(v for k, v in _ip["players"].items() if k not in _dl)); tok["IL_NONDL_PCT"] = f"{100 * sum(v for k, v in _ip['snaps'].items() if k not in _dl) / sum(_ip['snaps'].values()):.0f}"
 _cg = (res.get("continuous_by_class") or {}).get("player_get_off")
 if _cg:
-    _a = _cg["all"]; tok["GETOFF_MS"] = f"{-_a['b'] * _a['raw_sd'] * 1000:.0f}"; tok["GETOFF_SD"] = f"{-_a['b']:.2f}"; tok["GETOFF_BOOT"] = f"{-_a['boot_hi']:.2f} to {-_a['boot_lo']:.2f}"
+    _a = _cg["all"]; tok["GETOFF_MS"] = f"{-_a['b'] * _a['raw_sd'] * 1000:.0f}"; tok["GETOFF_SD"] = f"{-_a['b']:.2f}"; tok["GETOFF_BOOT"] = f"{-_a['boot_hi']:.2f} to {-_a['boot_lo']:.2f}"; tok["GETOFF_MS_BOOT"] = f"{-_a['boot_hi'] * _a['raw_sd'] * 1000:.0f} to {-_a['boot_lo'] * _a['raw_sd'] * 1000:.0f}"
     assert all(v["b"] < 0 for k, v in _cg.items()), "get-off sign claim no longer holds"
+_pr = res.get("getoff_pair")
+if _pr:
+    _f, _s = _pr["fast"], _pr["slow"]
+    tok["PAIR_SENTENCE"] = (f"**What that looks like.** A pre-specified pair (roster DT, NT or DE with 200+ rushes, same draft round, weight within 10 lb; the pair with the largest speed gap among {_pr['n_candidates']} eligible players): "
+        f"{_f['display_name']} ({int(_f['dy'])} class, round {int(_f['draft_round'])}, {_f['w']:.0f} lb, {_f['vpk']:.2f} yd/s) averaged a {_f['go']:.2f} s get-off and {_f['pres'] * 100:.1f}% pressure over {int(_f['n'])} rushes; "
+        f"{_s['display_name']} ({int(_s['dy'])} class, round {int(_s['draft_round'])}, {_s['w']:.0f} lb, {_s['vpk']:.2f} yd/s) averaged {_s['go']:.2f} s and {_s['pres'] * 100:.1f}% over {int(_s['n'])}. "
+        "One pair proves nothing on its own; it shows what the averages look like for two real players.")
+else:
+    tok["PAIR_SENTENCE"] = ""
+_corr_keys = [k for k in res["robust"] if k.startswith(("IPW", "Heckman", "Sensor-cleaned", "Context-adjusted"))]
+tok["CORR_RANGE"] = f"{min(res['robust'][k]['OR'] for k in _corr_keys):.2f} and {max(res['robust'][k]['OR'] for k in _corr_keys):.2f}"
 pb_ = res.get("pooled_boot"); tok["BOOTCI"] = (f"; resampling whole players, {pb_['OR_lo']:.2f} to {pb_['OR_hi']:.2f}" if pb_ else "")
 tok["PERM"] = "< 0.001" if res["perm_p"] < 0.001 else f"= {res['perm_p']:.3f}"
 top = res["eb"]["interior"]["top"][:5]
@@ -156,7 +167,7 @@ if lc:
         if wc and nulls:
             c_ = nulls[0][0]; cls_ = sorted(k for k in wc if k.isdigit()); ex_ = wc.get(f"int_excl{c_}_fe")
             prec = [k for k in cls_ if wc[k]["lo"] > 1.0]
-            s_ += (" Per class (Fig. 6) the estimate " + ("exceeds 1" if all(wc[k]["OR"] > 1 for k in cls_) else "mixed") + " ("
+            s_ += (" Per class (Fig. 7) the pressure estimate " + ("exceeds 1" if all(wc[k]["OR"] > 1 for k in cls_) else "mixed") + " ("
                    + ", ".join(f"{k} {wc[k]['OR']:.2f}" for k in cls_) + f"; class difference p = {wc['interaction_wald_p']:.2f}), but only "
                    + " and ".join(prec) + "'s clustered interval excludes 1" + (f", and its player bootstrap ({wc[prec[0]]['boot_ci'][0]:.2f} to {wc[prec[0]]['boot_ci'][1]:.2f}) touches 1" if len(prec) == 1 and wc[prec[0]].get("boot_ci") and wc[prec[0]]["boot_ci"][0] <= 1 else "") + (f"; without {c_}, OR {ex_['OR']:.2f} [{ex_['lo']:.2f}, {ex_['hi']:.2f}]" if ex_ else "")
                    + f". The data cannot separate a common effect from a {c_}-only one.")
