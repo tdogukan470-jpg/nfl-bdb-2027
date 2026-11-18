@@ -2,7 +2,7 @@
 
 **Track:** Open. The attached public notebook rebuilds every number and figure from the raw competition files; code, figures and results are mirrored at github.com/tdogukan470-jpg/nfl-bdb-2027.
 
-**Bottom line for a front office.** (1) The 40's top speed is the one Combine movement number that reaches the field: it repeats almost perfectly and shows up in game speed, while drill first-step numbers repeat poorly and track game speed weakly. (2) Faster interior linemen cross the line of scrimmage sooner: about 36 ms per +0.5 yd/s of top speed, a link that holds when whole players are resampled in the pooled data, though adding it does not improve get-off predictions for a held-out draft class (Fig. 4). (3) They also generate more pressure (6.3% to 11.4% from the 10th to 90th speed percentile), but that gain is borderline once whole players are resampled (0.99 to 1.42) and has not held out of class, so use it as a tiebreaker, not a rule. (4) For edge rushers, offensive linemen and receivers the 40 shows no consistent effect beyond size and draft slot.
+**Bottom line for a front office.** (1) The 40's top speed is the one Combine movement number that reaches the field: it repeats almost perfectly and shows up in game speed, while drill first-step numbers repeat poorly and track game speed weakly. (2) Faster interior linemen cross the line of scrimmage sooner: about 36 ms per +0.5 yd/s of top speed, a link that holds when whole players are resampled in the pooled data, though adding speed does not improve get-off predictions for a held-out draft class (Fig. 4). (3) They also generate more pressure (6.3% to 11.4% from the 10th to 90th speed percentile), but that gain is borderline once whole players are resampled (0.99 to 1.42) and has not held out of class, so use it as a tiebreaker, not a rule. (4) For edge rushers, offensive linemen and receivers the 40 shows no consistent effect beyond size and draft slot.
 
 ## 1. The question
 
@@ -66,7 +66,7 @@ Each +0.5 yd/s raises the odds of pressure by 22% (odds ratio, OR, 1.22; cluster
 Correcting for who reached the field, for game context and for sensor noise leaves the estimate between 1.17 and 1.23 (Appendix A1 to A3).
 
 ![Fig. 6: Robustness checks with clustered and player-bootstrap intervals](https://raw.githubusercontent.com/tdogukan470-jpg/nfl-bdb-2027/main/figures/fig6_robust.png)
-*Figure 6. The interior pressure effect under the baseline and key alternatives (all 22 in the notebook): fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
+*Figure 6. The interior pressure effect under the baseline and key alternatives (all 22 are in results.json): fixed effects, outcome definitions, seasons, sensor cleaning, selection correction and the context model, with clustered-SE intervals; the orange bar resamples whole players. 1.0 is no effect.*
 
 **Top speed, not burst.** Top speed carries the effect (OR 1.21) and burst carries none (OR 1.03, p = 0.54); the stopwatch 10-yard split adds nothing once the 40 is in (p = 0.35).
 
@@ -110,10 +110,7 @@ At 10 Hz the 40 is a top-speed test, and its clearest game footprint is a quicke
 
 ## Appendix A: robustness details
 
-**A1. Sensor audit and data hygiene.** No frame in any of the 793 forty-yard attempts (2023 to 2025) exceeds 3.5 g (median peak 0.5 g), so quantization spikes do not drive the feature; rebuilding top speed with a Savitzky-Golay filter [9] or a 2.5 g limiter leaves it (r = 0.999) and the interior result (OR 1.23 and 1.22) unchanged. Public notebooks report [11] (not verified by us) that 2023-24 positions sit on a 1/60-yd grid while 2025 is full precision, so every model carries draft-class fixed effects; the 2025 and 2023 classes give similar point estimates (1.24 and 1.27; Section 7).
-
-We drop preseason and playoff games (21% of player-play rows) and keep regular-season dropbacks; including every game gives OR 1.23.
-
+**A1. Sensor audit and data hygiene.** No frame in any of the 793 forty-yard attempts (2023 to 2025) exceeds 3.5 g (median peak 0.5 g), so quantization spikes do not drive the feature; rebuilding top speed with a Savitzky-Golay filter [9] or a 2.5 g limiter leaves it (r = 0.999) and the interior result (OR 1.23 and 1.22) unchanged. Public notebooks report [11] (not verified by us) that 2023-24 positions sit on a 1/60-yd grid while 2025 is full precision, so every model carries draft-class fixed effects; the 2025 and 2023 classes give similar point estimates (1.24 and 1.27; Section 7). We drop preseason and playoff games (21% of player-play rows) and keep regular-season dropbacks; including every game gives OR 1.23.
 
 **A2. Are we only seeing the players good enough to play?** A fast lineman who never earns snaps is invisible here, which could flatter speed. Of 510 prospects, 79% appear in game tracking, but only 105 (21%) rush the passer and 48 (9%) rush 100+ times. Upweighting rushers whose profile made the field unlikely (stabilized inverse-probability weights; with AUC 0.96 the weights lean on few players) gives OR 1.17 (1.04 to 1.33), the same for 100+ rushes. A Heckman-type control function [7], with draft class as the excluded variable (so that outcome model drops class fixed effects), gives 1.22 and 1.19 (Mills ratio p = 0.16 and 0.63). The estimate shrinks slightly but survives.
 
